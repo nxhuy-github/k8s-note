@@ -193,7 +193,7 @@ At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & 
 
 - Canary - let the user do the testing
     - routes a **subset of users** to a new functionality (to get user feedback for new features, for ex). And when no errors reported, the new version can gradually roll out to the rest of the infrastructure. So basically, this is an ideal strategy for someone who want to test new version before it's deployed 100%.
-    - <img src="./images/k8s-canary.png" height=200 width=100% alt="Canary"/>
+    - <img src="./images/k8s-canary.png" alt="Canary"/>
 
 - Blue / Green
     - the **Green** (new one) version of the application is deployed alongside the **Blue** (old one) version. But the **Blue** still receives *all user traffic* (which means handle user request) whereas the **Green** is *idle* for testing. Once the testing results are successful, application traffic is routed from **Blue** to **Green**.
