@@ -149,7 +149,7 @@ Watch the table below, the left column and the right column present the same thi
 
 |||
 |-----|-----|
-|...<br>selector:<br>&emsp;app: nginx<br>&emsp;tier: frontend<br>...|...<br>selector:<br>&emsp;&emsp;`matchLabels`:<br>&emsp;&emsp;&emsp;app: nginx<br>&emsp;&emsp;&emsp;tier: frontend<br>...|
+|...<br>selector:<br>&emsp;app: nginx<br>&emsp;tier: frontend<br>...|...<br>selector:<br>&emsp;`matchLabels`:<br>&emsp;&emsp;app: nginx<br>&emsp;&emsp;tier: frontend<br>...|
 |Use in **Replication Controller**, **Services**| Use in **ReplicaSet**, **Deployment**, **Job**, **DaemonSet**|
 |||
 
