@@ -145,12 +145,13 @@ The **ReplicaSet** and **Pods** are associated with `labels`.
 
 - `selectors` helps us identify a set of objects. 
 
-Now we take a look at `matchLabels` in `selectors`:
+Watch the table below, the left column and the right column present the same thing: select objects based on two labels. The difference here is the `matchLabels` on the right. In fact, we **only** use `matchLabels` in some objects:
 
 |||
 |-----|-----|
-|...<br>&emsp;selector:<br>&emsp;&emsp;app: nginx<br>&emsp;&emsp;tier: frontend<br>&emsp;...|...<br>&emsp;selector:<br>&emsp;&emsp;`matchLabels`:<br>&emsp;&emsp;&emsp;app: nginx<br>&emsp;&emsp;&emsp;tier: frontend<br>&emsp;...|
+|...<br>selector:<br>&emsp;app: nginx<br>&emsp;tier: frontend<br>...|...<br>selector:<br>&emsp;&emsp;`matchLabels`:<br>&emsp;&emsp;&emsp;app: nginx<br>&emsp;&emsp;&emsp;tier: frontend<br>...|
 |Use in **Replication Controller**, **Services**| Use in **ReplicaSet**, **Deployment**, **Job**, **DaemonSet**|
+|||
 
 The K8s currently supports two types of `selectors`: *equality-based* and *set-based*.
 
@@ -159,7 +160,7 @@ The K8s currently supports two types of `selectors`: *equality-based* and *set-b
 | Operations:<br>&emsp;= == !=  | Operations:<br>&emsp;in notin exists  |
 |   Examples: <br>&emsp;# Get all Pods who their environment are production<br>&emsp; environment = production<br>&emsp;# Get all Pods who their tier are not frontend<br>&emsp; tier != frontend  | Examples:<br>&emsp;# Get all Pods who their environment are production OR qa<br>&emsp; environment in (production, qa)<br>&emsp;# Get all Pods who their tier are not frontend AND backend<br>&emsp; tier notin (frontend, backend)  |
 |Use along with kubectl:<br>&emsp;`$ kubectl get pods -l environment=production`|Use along with kubectl:<br>&emsp;`$ kubectl get pods -l environment in (production)`|
-|In Manifest (yaml) file:<br>&emsp;...<br>&emsp;`selector`:<br>&emsp;&emsp;environment: production<br>&emsp;&emsp;tier: frontend<br>&emsp;...|In Manifest (yaml) file:<br>&emsp;...<br>&emsp;`selector`:<br>&emsp;&emsp;`matchExpressions`:<br>&emsp;&emsp;&emsp;- {key: `tier`, operator: `In`, values: [`cache`]}<br>&emsp;&emsp;&emsp;- {key: `environment`, operator: `NotIn`, values: [`dev`,`qa`]}<br>&emsp;...|
+|In Manifest (yaml) file:<br>&emsp;...<br>&emsp;`selector`:<br>&emsp;&emsp;environment: production<br>&emsp;&emsp;tier: frontend<br>&emsp;...|In Manifest (yaml) file:<br>&emsp;...<br>&emsp;`selector`:<br>&emsp;&emsp;`matchLabels`:<br>&emsp;&emsp;&emsp;release: stable<br>&emsp;&emsp;`matchExpressions`:<br>&emsp;&emsp;&emsp;- {key: `tier`, operator: `In`, values: [`cache`, `frontend`]}<br>&emsp;&emsp;&emsp;- {key: `environment`, operator: `NotIn`, values: [`dev`,`qa`]}<br>&emsp;...|
 |Support by:<br>&emsp; **Services**, **Replication Controller**| Support by:<br>&emsp; **Job**, **Deployment**, **ReplicaSet**, **DaemonSet**|
 
 :information_source: we use `matchLabels` when we have key with **one** value. In case there are **a set** of value to select from, we use `matchExpressions`. 
