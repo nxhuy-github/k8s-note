@@ -164,6 +164,39 @@ The K8s currently supports two types of `selectors`: *equality-based* and *set-b
 
 :information_source: we use `matchLabels` when we have key with **one** value. In case there are **a set** of value to select from, we use `matchExpressions`. 
 
+## Deployment
+There are a couple of questions we might ask when we try to upgrade an application, for ex: from v1 to v2:
+- upgrade with zero downtime ?
+- upgrade sequentially, one after the other ?
+- pause and resume upgrade process ?
+- rollback if error ? 
+
+At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)). The **Deployment** manifest file contains the **Pod** definition, the number of **Pod** replicas that we need and also our prefer upgrade strategy that we want.
+
+### Features
+- Multiple Replicas
+    - If we don't mention `rc` in **Deployment** manifest file, it will create `rc` (= 1) to make sure there's one **Pod** always running.
+- Upgrade
+- Rollback
+- Scale up or down
+- Pause and resume
+
+### Types
+- Recreate
+    - terminate all the running instances then recreate them with the newer version
+    - there is a downtime that depends on both shutdown and boot duration of the application
+
+- RollingUpdate (Ramped) [**Default**]
+    - It works by slowly: a secondary `rc` is created with the new version, then replacing **Pods** of the previous version of your application with **Pods** of the new version (one by one) until the correct number of replicas is reached.
+
+- Canary - let the user do the testing
+    - routes a **subset of users** to a new functionality (to get user feedback for new features, for ex). And when no errors reported, the new version can gradually roll out to the rest of the infrastructure. So basically, this is an ideal strategy for someone who want to test new version before it's deployed 100%.
+    - <img src="./images/k8s-canary.png" height=200 alt="Canary"/>
+
+- Blue / Green
+    - the **Green** (new one) version of the application is deployed alongside the **Blue** (old one) version. But the **Blue** still receives *all user traffic* (which means handle user request) whereas the **Green** is *idle* for testing. Once the testing results are successful, application traffic is routed from **Blue** to **Green**.
+    - <img src="./images/k8s-bluegreen.png" alt="BlueGreen"/>
+
 
 # Architecture of K8s
 
@@ -239,4 +272,9 @@ This is responsible for running containers
 [1] https://kubernetes.io/docs/concepts/
 
 [2] https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-networking-guide-beginners.html
+
+[3] https://dev.to/mostlyjason/intro-to-deployment-strategies-blue-green-canary-and-more-3a3
+
+[4] https://blog.container-solutions.com/kubernetes-deployment-strategies
+
 
