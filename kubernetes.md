@@ -163,7 +163,7 @@ The K8s currently supports two types of `selectors`: *equality-based* and *set-b
 |In Manifest (yaml) file:<br>&emsp;...<br>&emsp;`selector`:<br>&emsp;&emsp;environment: production<br>&emsp;&emsp;tier: frontend<br>&emsp;...|In Manifest (yaml) file:<br>&emsp;...<br>&emsp;`selector`:<br>&emsp;&emsp;`matchLabels`:<br>&emsp;&emsp;&emsp;release: stable<br>&emsp;&emsp;`matchExpressions`:<br>&emsp;&emsp;&emsp;- {key: `tier`, operator: `In`, values: [`cache`, `frontend`]}<br>&emsp;&emsp;&emsp;- {key: `environment`, operator: `NotIn`, values: [`dev`,`qa`]}<br>&emsp;...|
 |Support by:<br>&emsp; **Services**, **Replication Controller**| Support by:<br>&emsp; **Job**, **Deployment**, **ReplicaSet**, **DaemonSet**|
 
-:information_source: we use `matchLabels` when we have key with **one** value. In case there are **a set** of value to select from, we use `matchExpressions`. 
+:information_source: we use `matchLabels` when we have **key** of `labels` associated with **only one value**. In case there are **a set of value** to select from, we use `matchExpressions`. 
 
 ## Deployment
 <img src="./images/k8s-deployment.png" alt="Deployment" />
