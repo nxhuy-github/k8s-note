@@ -116,9 +116,70 @@ For example: K8s might give
 
 
 ## Service
-In Kubernetes, a **Service** is an abstraction which defines a logical set of Pods and a policy by which to access them.
+Imagine that, you have been asked to deploy web app
+- How does this front-end web app is exposed to outside world?
+- How do front-end web app connected to backend database?
+- **Pods** do die, when they die, it get recreated if the Controller is supporting, but when they recreated, their IP changes, so it will be difficult to connect and communicate when IP changes dynamically, how do we resolve this problem?
+
+
+In Kubernetes, a **Service** is an abstraction which defines a logical set of **Pods** and a policy by which to access them. **Service** provides some of the **important features**, that are standardized across the cluster, such as load-balancing, service discovery between apps, supporting zero downtime app deployments.
 
 <img src="./images/k8s-service.png" alt="Service"/>
+
+:information_source: The **Domain Name System (DNS)** is a system for associating various types of information – such as IP addresses – with easy-to-remember names. So that means each **Service** has its own DNS name or its own IP addresse.
+
+Using `selectors`, a **Service** will select the **Pods**' `labels` to get its respective **Pods**.
+
+### Types of Services
+#### ClusterIP [Default]
+It is reachable only from **within** the cluster: it gives us a **Service** inside our cluster that other apps inside our cluster can access. There is *no external access*.
+
+#### NodePort
+**NodePort**, superset of **ClusterIP**, opens **a** specific **port on all** the Nodes of our cluster (in case if we don't mention **NodePort** specifically in the manifest file, then K8s will assign unused **NodePort** dynamically). It makes a **Service** accessible from the outside world using `NodeIP:NodePort`.
+
+Now, we will find out the difference **Port Types** that we can use, look at the picture below
+
+<img src="./images/k8s-porttypes.png" alt="Port Types"/>
+
+Here we have:
+- `nodePort` 
+    - this port with Node IP make the **Service** visible *outside* the cluster
+- `port` 
+    - the port of **Service** itself, it make **Service** will be reachable via this port
+    - any request reaching there is forwarded to a running **Pod** on `targetPort`
+- `targetPort`: 
+    - this is the port on actually **Pod** where the app is running. If it is not specified , the `targetPort` and `port` will be the same by default
+
+We have some **scenarios** as following
+- Multi instances in same Node
+    - <img src="./images/k8s-mlpinstonnode.png" alt="Multi instances in same Node"/>
+    - here, we simply use 100.96.1.xxx:31000, for this example, to access
+
+- Multi instances in difference Node
+    - <img src="./images/k8s-mlpinstondiffnode.png" alt="Multi instances in difference Node">
+    - here, we can use any combination `NodeIP:NodePort` to access
+
+
+However, there are some **downsides** when using this type:
+- only one **Service** per port
+- only use ports 30000 – 32767
+- If the Node IP address changes, we need to deal with that
+
+:warning: For these reasons, people don’t recommend using this method in production to directly expose our apps. If we are running a app that doesn’t have to be always available, or we are very cost sensitive, this method will work. A good example of such an application is a demo app or something temporary.
+
+#### LoadBalancer
+In [the Multi instances in difference Node](####NodePort) scenario of **NodePort** where we have a multiple instances of **Pods** that are deployed on multiple Nodes. The problem with this setup here is to access this app, we can use any of the public IP of the Node and the `NodePort`, so:
+- Which `NodeIP` will we provide to the end-users? 
+- Are they comfortable to use IP and port number to access the app?
+- How is the traffic balanced equally among all Nodes inside the cluster?
+
+=> That's where **LoadBalancer** comes into the pictures
+
+<img src="./images/k8s-loadbalancer.png" alt="LoadBalancer" />
+
+This type, superset of **NodePort**, is the standard way to expose a **Service** to the internet, by using the load balancer of the current cloud provider (like *Network Load Balancer of GKE*) or creating an external load balancer in the current cloud (if supported). Both ways will give us a **single IP address** (for one **Service**) that will forward all traffic to our **Service**. In this figure above, we need to configure the DNS server to point to this IP address, so the end-users can access the app using the URL [myapp.com]().
+
+:warning: In reality, in the cloud like GCP or AWS, the **LoadBalancer** is not cheap, every time we create a **Service** of type **LoadBalancer**, it will cost us dollars.
 
 ### Communication between Pods and Services
 
@@ -200,6 +261,9 @@ At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & 
     - the **Green** (new one) version of the application is deployed alongside the **Blue** (old one) version. But the **Blue** still receives *all user traffic* (which means handle user request) whereas the **Green** is *idle* for testing. Once the testing results are successful, application traffic is routed from **Blue** to **Green**.
     - <img src="./images/k8s-bluegreen.png" alt="BlueGreen"/>
 
+<br/>
+
+:information_source: In real world scenario, for each of the applications in our list, we should have to define [one **Deployment** for one application](https://stackoverflow.com/questions/43217006/how-to-configure-a-kubernetes-multi-pod-deployment), for example: if our system has 4 components: API Server, UI Server, Redis cache, Timer task Server => we should create 4 **Deployments** (knowing that one component defined by one **Pod**).
 
 # Architecture of K8s
 
@@ -279,5 +343,13 @@ This is responsible for running containers
 [3] https://dev.to/mostlyjason/intro-to-deployment-strategies-blue-green-canary-and-more-3a3
 
 [4] https://blog.container-solutions.com/kubernetes-deployment-strategies
+
+[5] https://www.udemy.com/course/kubernetes-made-easy/
+
+[6] https://medium.com/google-cloud/kubernetes-nodeport-vs-loadbalancer-vs-ingress-when-should-i-use-what-922f010849e0
+
+[7] https://stackoverflow.com/questions/49981601/difference-between-targetport-and-port-in-kubernetes-service-definition
+
+[8] https://stackoverflow.com/questions/41963433/what-does-it-mean-for-a-service-to-be-of-type-nodeport-and-have-both-port-and-t?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 
 
