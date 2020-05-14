@@ -132,7 +132,7 @@ Using `selectors`, a **Service** will select the **Pods**' `labels` to get its r
 
 ### Types of Services
 #### ClusterIP [Default]
-It is reachable only from **within** the cluster: it gives us a **Service** inside our cluster that other apps inside our cluster can access. There is *no external access*.
+It is reachable only from **within** the cluster: it gives us a **Service** inside our cluster that other apps inside our cluster can access (for example: we don't want to expose our database to the outside world, in such case, **Service** type ClusterIP is a good option). There is *no external access*.
 
 #### NodePort
 **NodePort**, superset of **ClusterIP**, opens **a** specific **port on all** the Nodes of our cluster (in case if we don't mention **NodePort** specifically in the manifest file, then K8s will assign unused **NodePort** dynamically). It makes a **Service** accessible from the outside world using `NodeIP:NodePort`.
@@ -264,6 +264,48 @@ At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & 
 <br/>
 
 :information_source: In real world scenario, for each of the applications in our list, we should have to define [one **Deployment** for one application](https://stackoverflow.com/questions/43217006/how-to-configure-a-kubernetes-multi-pod-deployment), for example: if our system has 4 components: API Server, UI Server, Redis cache, Timer task Server => we should create 4 **Deployments** (knowing that one component defined by one **Pod**).
+
+## Storage Volumes
+At some point, your apps requires storage where the data is stored and accessed
+- How does this storage volumes are handled inside the K8s?
+- How can data persist beyond **Pod** life?
+- How do the containers in same **Pod** share data among them?
+
+That's when the **Volumes**(for short) comes in. In general, we have two principal groups of **Volumes**:
+- Ephemeral : same lifetime as **Pods**
+- Durable : Beyond **Pods** lifetime
+
+In detail, K8s support multiple types of **Volumes** such as emptyDir, hostPath, configMap, gcePersistentDisk, azureDisk, awsElasticBlockStore, etc. We'll workthrough some of them.
+
+### emptyDir
+- K8s creates the empty directory volume on the Node where **Pod** is scheduled. 
+    - After that, the containers inside that **Pod** can write and read the data from this volume. 
+
+- Data stays as long as the **Pod** is alive. 
+    - So once **Pod** is removed from a Node, the **emptyDir** is deleted and the data inside is wipe out forever. 
+
+- The primary use is for the temporary space and to share data between multiple containers in the **Pod**.
+
+### hostPath
+- exposes a file or directory on the Worker Node as a volume inside the **Pod**. 
+- the Data inside the **hostPath** volume remains even after the **Pod** is terminated. 
+    - It comes close to the **Docker Volume** concept because, basically, **Docker Volume** will expose the host file system directory as one of the internal directory of container.
+
+:warning: We need to be very *cautious* when using this type of volume inside the production environment. Because, when the **Pod** is scheduled on the multiple Worker Nodes, then K8s will create the **hostPath** volume on each Worker Node -> Worker Nodes will have their own exclusive **hostPath** volume which may not be insync and the **Pods** will deal the different storage.
+
+:information_source: So unless we have the specific requirements, don't use **hostPath**.
+
+### gcePersistentDisk
+- mounts a Google Compute Engince (GCE) Persistent Disk into our **Pod**. 
+- when a **Pod** is removed, the contents of a are preserved. 
+- PD can be mounted as [read-only]() by multiple **Pods** simultaneously, which means that we can pre-populate a PD with your dataset and then serve it in parallel from as many **Pods** as we need. However, PD can only be mounted by a single **Pod** in [read-write]() mode.
+
+Restriction:
+- must create PD before use it
+- Worker Nodes, on which **Pods** are running, must be GCE VMs
+- those VMs need to be in same GCE project and zone as the PD
+
+:warning: These restriction are same for AWS or Azure
 
 # Architecture of K8s
 
