@@ -307,6 +307,37 @@ Restriction:
 
 :warning: These restriction are same for AWS or Azure
 
+## Persistent Volumes
+A *PersistentVolume* (**PV** for short) is a piece of storage in the cluster, which means **PV** is *a resource in the cluster* just like a Node is a cluster resource. So the **PV** lifecycle is independent with **Pods** lifecycle that use the PV.
+
+A *PersistentVolumeClaim* (**PVC**) is *a request for storage* (describes the amount and characteristics of the storage) by a user.
+
+### Lifecycle of PV
+
+Provisioning ----> Binding ----> Using ----> Reclaiming
+
+#### Provisioning
+In this stage, the typical administrator creates the storage volumes, these volumes can be any storage such as block, nfs, etc. In K8s, these volumes are called **PV**.
+
+There are two ways PVs may be provisioned
+- Static
+    - A cluster administrator creates a number of **PVs**
+    - **PVs** need to be create *before* **PVCs**
+- Dynamic
+    - Instead of creating **PVs** manually, we create the **StorageClasses**
+    - **PVs** are created *at same time* of **PVCs**
+
+#### Binding
+In this stage, we bind the *storage request*, **PVC**, to the **PV** that was provisioned earlier stage. So typically, the developer creates this **PVC** to request the specific amount of storage and access modes. 
+
+A control loop on K8s Master watches for any new **PVCs** and binds the matching **PV** (might be the volume *can be in excess* of what was requested, *but not too much*) if it's available. If a matching volume does not exis, **PVC** will wait until the matching volumes become available (for ex: wait until new **PV** is added to cluster, etc)
+
+#### Using
+**Pods** use claims as volumes and now the **PV** belongs to the users for as long as they need it.
+
+#### Reclaiming
+When a user is done with their volume, they can delete the **PVC** from K8s which allows K8s reclaiming its resources. Technically, K8s has multiple ways to reclaim.
+
 # Architecture of K8s
 
 <img src="./images/k8s-architecture.png" alt="Architecture"/>
