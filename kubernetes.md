@@ -324,7 +324,7 @@ There are two ways PVs may be provisioned
     - A cluster administrator creates a number of **PVs**
     - **PVs** need to be create *before* **PVCs**
 - Dynamic
-    - Instead of creating **PVs** manually, we create the **StorageClasses**
+    - Instead of creating **PVs** manually, we *first create* the **StorageClasses**
     - **PVs** are created *at same time* of **PVCs**
 
 #### Binding
@@ -337,6 +337,43 @@ A control loop on K8s Master watches for any new **PVCs** and binds the matching
 
 #### Reclaiming
 When a user is done with their volume, they can delete the **PVC** from K8s which allows K8s reclaiming its resources. Technically, K8s has multiple ways to reclaim.
+
+## ConfigMap
+A **ConfigMap**, a dictionary of configuration settings, allows us to decouple environment-specific configuration from **Pods**/containers, which means it keeps our application code separate from our configuration. So this lets us change easily configuration depending on the environment (development, production, testing).
+
+:warning: We must create a **ConfigMap** before referencing it in a **Pod** `spec` (in yaml file).
+
+We can create a **ConfigMap** from:
+- directories
+    - where they contain the configurations files
+- file
+- literal key-value pairs defined on the command line (`--from-literal`) 
+
+Now, where do we place the **ConfigMap** inside the **Pod**, so there are two different ways:
+- mounting it as a **Volume**
+- via environment variables (use `envFrom` in **Pod**'s yaml file)
+
+## DaemonSet
+How you deploy **only one Pod on every (or subset) Node** inside the cluster? 
+
+**DaemonSet** ensures that all or some Nodes inside the cluster runs *a copy of a* **Pod**. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected.
+
+## Secrets
+- like **ConfigMap** but let us store and manage *sensitive information*, such as passwords, OAuth tokens, and ssh keys. 
+- are created outside of **Pods** and stored along with other configurations inside `etcd` database on K8s Master
+- no more than 1MB
+- are sent only to the target Nodes where the **Pods** demand it, unlike the **ConfigMap** who is broadcasted.
+
+To use a **Secret**, a **Pod** needs to reference the **Secret**, there are two ways
+- As files in a **Volume** mounted
+- Env variables
+
+## Jobs
+**Job** is a higher level abstraction that uses **Pods** to run a completable task.
+
+There a two types:
+- Run-to-completion aka **Jobs**
+- Scheduled aka **CronJob**
 
 # Architecture of K8s
 
@@ -424,5 +461,7 @@ This is responsible for running containers
 [7] https://stackoverflow.com/questions/49981601/difference-between-targetport-and-port-in-kubernetes-service-definition
 
 [8] https://stackoverflow.com/questions/41963433/what-does-it-mean-for-a-service-to-be-of-type-nodeport-and-have-both-port-and-t?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+
+[9] https://www.youtube.com/playlist?list=PLMPZQTftRCS8Pp4wiiUruly5ODScvAwcQ
 
 
