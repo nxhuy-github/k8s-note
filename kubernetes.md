@@ -76,6 +76,7 @@ A Pod contains:
 - an application container (or, in some cases, multiple containers)
 - storage resource (or volume), usually there is single volume for all the containers inside the pod 
 - **a unique IP address**
+    - new IP address on **re**-creation
 
 <img src="./images/k8s-pods.png" alt="Pods"/>
 
@@ -122,11 +123,18 @@ Imagine that, you have been asked to deploy web app
 - **Pods** do die, when they die, it get recreated if the Controller is supporting, but when they recreated, their IP changes, so it will be difficult to connect and communicate when IP changes dynamically, how do we resolve this problem?
 
 
-In Kubernetes, a **Service** is an abstraction which defines a logical set of **Pods** and a policy by which to access them. **Service** provides some of the **important features**, that are standardized across the cluster, such as load-balancing, service discovery between apps, supporting zero downtime app deployments.
+In Kubernetes, a **Service** is an abstraction 
+- defines a logical set of **Pod(s)** 
+    - but lifecycle of **Pod(s)** and **Service** NOT connected
+- defines a policy by which to access them 
+- provides some of the **important features**, that are standardized across the cluster, such as 
+    - load-balancing
+    - service discovery between apps
+    - supporting zero downtime app deployments
 
 <img src="./images/k8s-service.png" alt="Service"/>
 
-:information_source: The **Domain Name System (DNS)** is a system for associating various types of information – such as IP addresses – with easy-to-remember names. So that means each **Service** has its own DNS name or its own IP addresse.
+:information_source: The **Domain Name System (DNS)** is a system for associating various types of information – such as IP addresses – with easy-to-remember names. :fast_forward: that means each **Service** has its own DNS name or its own IP addresse.
 
 Using `selectors`, a **Service** will select the **Pods**' `labels` to get its respective **Pods**.
 
@@ -184,6 +192,113 @@ This type, superset of **NodePort**, is the standard way to expose a **Service**
 ### Communication between Pods and Services
 
 This happens via `kube-proxy`.
+
+## ConfigMap
+Imagine that we have a **Pod** `my-app` and a **Pod** `DB`. And they work together to create our application. To do that, `my-app` need a database endpoint, let's say `mongo-db-service` which is used to communicate with the database. And usually, this database url or endpoint is configured in `my-app` (like in properties file for ex). That means, the database url is usually inside of the build image of our application. And that causes a problem: if the endpoint changed to, for ex: `mongo-db`, we would have to adjust that url in the application, rebuild the application with the new version, push it to the repo, pull it in our **Pod**, etc. And K8s helps us to solve that by using **ConfigMap**. 
+
+A **ConfigMap**, a dictionary of configuration settings, allows us to decouple environment-specific configuration from **Pods**/containers, which means it keeps our application code separate from our configuration (like database url for ex). So this lets us change easily configuration depending on the environment (development, production, testing).
+
+:warning: We must create a **ConfigMap** before referencing it in a **Pod** `spec` (in yaml file).
+
+We can create a **ConfigMap** from:
+- directories
+    - where they contain the configurations files
+- file
+- literal key-value pairs defined on the command line (`--from-literal`) 
+
+Now, where do we place the **ConfigMap** inside the **Pod**, so there are two different ways:
+- mounting it as a **Volume**
+- via environment variables (use `envFrom` in **Pod**'s yaml file)
+
+## Secrets
+- like **ConfigMap** but let us store and manage *sensitive information*, such as passwords, OAuth tokens, and ssh keys. 
+- are created outside of **Pods** and stored along with other configurations inside `etcd` database on K8s Master
+- no more than 1MB
+- are sent only to the target Nodes where the **Pods** demand it, unlike the **ConfigMap** who is broadcasted.
+
+To use a **Secret**, a **Pod** needs to reference the **Secret**, there are two ways
+- As files in a **Volume** mounted
+- Env variables
+
+## (Storage) Volumes
+At some point, your apps requires storage where the data is stored and accessed
+- How does this storage volumes are handled inside the K8s?
+- How can data persist beyond **Pod** life?
+    - If the database container or the **Pod** gets restarted, the data would be gone, how to solve that?
+- How do the containers in same **Pod** share data among them?
+
+That's when the **Volumes**(for short) comes in. It basically attaches a physical storage on a hard drive to your **Pod**. And that storage could be either on 
+- a local machine, meaning on the same server node where the **Pod** is running
+- a remote machine, meaning outside of the K8s cluster which is not a part of K8s cluster
+
+:warning: K8s doesn't manage data persistance, that means we (the K8s users) are responsible for backing up, replicating and managing the data. 
+
+In general, we have two principal groups of **Volumes**:
+- Ephemeral : same lifetime as **Pods**
+- Durable : Beyond **Pods** lifetime
+
+In detail, K8s support multiple types of **Volumes** such as emptyDir, hostPath, configMap, gcePersistentDisk, azureDisk, awsElasticBlockStore, etc. We'll workthrough some of them.
+
+### emptyDir
+- K8s creates the empty directory volume on the Node where **Pod** is scheduled. 
+    - After that, the containers inside that **Pod** can write and read the data from this volume. 
+
+- Data stays as long as the **Pod** is alive. 
+    - So once **Pod** is removed from a Node, the **emptyDir** is deleted and the data inside is wipe out forever. 
+
+- The primary use is for the temporary space and to share data between multiple containers in the **Pod**.
+
+### hostPath
+- exposes a file or directory on the Worker Node as a volume inside the **Pod**. 
+- the Data inside the **hostPath** volume remains even after the **Pod** is terminated. 
+    - It comes close to the **Docker Volume** concept because, basically, **Docker Volume** will expose the host file system directory as one of the internal directory of container.
+
+:warning: We need to be very *cautious* when using this type of volume inside the production environment. Because, when the **Pod** is scheduled on the multiple Worker Nodes, then K8s will create the **hostPath** volume on each Worker Node -> Worker Nodes will have their own exclusive **hostPath** volume which may not be insync and the **Pods** will deal the different storage.
+
+:information_source: So unless we have the specific requirements, don't use **hostPath**.
+
+### gcePersistentDisk
+- mounts a Google Compute Engince (GCE) Persistent Disk into our **Pod**. 
+- when a **Pod** is removed, the contents of a are preserved. 
+- PD can be mounted as [read-only]() by multiple **Pods** simultaneously, which means that we can pre-populate a PD with your dataset and then serve it in parallel from as many **Pods** as we need. However, PD can only be mounted by a single **Pod** in [read-write]() mode.
+
+Restriction:
+- must create PD before use it
+- Worker Nodes, on which **Pods** are running, must be GCE VMs
+- those VMs need to be in same GCE project and zone as the PD
+
+:warning: These restriction are same for AWS or Azure
+
+### PersistentVolumeClaim
+A *PersistentVolumeClaim* (**PVC**) is *a request for Persistent Volumes* by a user.
+
+
+#### :bangbang: About Persistent Volumes
+A *PersistentVolume* (**PV** for short) is a piece of storage in the cluster, which means **PV** is *a resource in the cluster* just like a Node is a cluster resource. So the **PV** lifecycle is independent with **Pods** lifecycle that use the PV.
+
+Lifecycle of PV: Provisioning ----> Binding ----> Using ----> Reclaiming
+
+#### Provisioning
+In this stage, the typical administrator creates the storage volumes, these volumes can be any storage such as block, nfs, etc. In K8s, these volumes are called **PV**.
+
+There are two ways PVs may be provisioned
+- Static
+    - A cluster administrator creates a number of **PVs**
+    - **PVs** need to be create *before* **PVCs**
+- Dynamic
+    - Instead of creating **PVs** manually, we *first create* the **StorageClasses**
+    - **PVs** are created *at same time* of **PVCs**
+
+#### Binding
+In this stage, we bind the *storage request*, **PVC**, to the **PV** that was provisioned earlier stage. So typically, the developer creates this **PVC** to request the specific amount of storage and access modes. 
+
+A control loop on K8s Master watches for any new **PVCs** and binds the matching **PV** (might be the volume *can be in excess* of what was requested, *but not too much*) if it's available. If a matching volume does not exis, **PVC** will wait until the matching volumes become available (for ex: wait until new **PV** is added to cluster, etc)
+
+#### Using
+**Pods** use claims as volumes and now the **PV** belongs to the users for as long as they need it.
+
+#### Reclaiming
+When a user is done with their volume, they can delete the **PVC** from K8s which allows K8s reclaiming its resources. Technically, K8s has multiple ways to reclaim.
 
 ## Replication Controller
 This object (`rc` for short) ensures that a specified number of **Pod** replicas are running at any one time. 
@@ -265,108 +380,12 @@ At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & 
 
 :information_source: In real world scenario, for each of the applications in our list, we should have to define [one **Deployment** for one application](https://stackoverflow.com/questions/43217006/how-to-configure-a-kubernetes-multi-pod-deployment), for example: if our system has 4 components: API Server, UI Server, Redis cache, Timer task Server => we should create 4 **Deployments** (knowing that one component defined by one **Pod**).
 
-## Storage Volumes
-At some point, your apps requires storage where the data is stored and accessed
-- How does this storage volumes are handled inside the K8s?
-- How can data persist beyond **Pod** life?
-- How do the containers in same **Pod** share data among them?
 
-That's when the **Volumes**(for short) comes in. In general, we have two principal groups of **Volumes**:
-- Ephemeral : same lifetime as **Pods**
-- Durable : Beyond **Pods** lifetime
-
-In detail, K8s support multiple types of **Volumes** such as emptyDir, hostPath, configMap, gcePersistentDisk, azureDisk, awsElasticBlockStore, etc. We'll workthrough some of them.
-
-### emptyDir
-- K8s creates the empty directory volume on the Node where **Pod** is scheduled. 
-    - After that, the containers inside that **Pod** can write and read the data from this volume. 
-
-- Data stays as long as the **Pod** is alive. 
-    - So once **Pod** is removed from a Node, the **emptyDir** is deleted and the data inside is wipe out forever. 
-
-- The primary use is for the temporary space and to share data between multiple containers in the **Pod**.
-
-### hostPath
-- exposes a file or directory on the Worker Node as a volume inside the **Pod**. 
-- the Data inside the **hostPath** volume remains even after the **Pod** is terminated. 
-    - It comes close to the **Docker Volume** concept because, basically, **Docker Volume** will expose the host file system directory as one of the internal directory of container.
-
-:warning: We need to be very *cautious* when using this type of volume inside the production environment. Because, when the **Pod** is scheduled on the multiple Worker Nodes, then K8s will create the **hostPath** volume on each Worker Node -> Worker Nodes will have their own exclusive **hostPath** volume which may not be insync and the **Pods** will deal the different storage.
-
-:information_source: So unless we have the specific requirements, don't use **hostPath**.
-
-### gcePersistentDisk
-- mounts a Google Compute Engince (GCE) Persistent Disk into our **Pod**. 
-- when a **Pod** is removed, the contents of a are preserved. 
-- PD can be mounted as [read-only]() by multiple **Pods** simultaneously, which means that we can pre-populate a PD with your dataset and then serve it in parallel from as many **Pods** as we need. However, PD can only be mounted by a single **Pod** in [read-write]() mode.
-
-Restriction:
-- must create PD before use it
-- Worker Nodes, on which **Pods** are running, must be GCE VMs
-- those VMs need to be in same GCE project and zone as the PD
-
-:warning: These restriction are same for AWS or Azure
-
-## Persistent Volumes
-A *PersistentVolume* (**PV** for short) is a piece of storage in the cluster, which means **PV** is *a resource in the cluster* just like a Node is a cluster resource. So the **PV** lifecycle is independent with **Pods** lifecycle that use the PV.
-
-A *PersistentVolumeClaim* (**PVC**) is *a request for storage* (describes the amount and characteristics of the storage) by a user.
-
-### Lifecycle of PV
-
-Provisioning ----> Binding ----> Using ----> Reclaiming
-
-#### Provisioning
-In this stage, the typical administrator creates the storage volumes, these volumes can be any storage such as block, nfs, etc. In K8s, these volumes are called **PV**.
-
-There are two ways PVs may be provisioned
-- Static
-    - A cluster administrator creates a number of **PVs**
-    - **PVs** need to be create *before* **PVCs**
-- Dynamic
-    - Instead of creating **PVs** manually, we *first create* the **StorageClasses**
-    - **PVs** are created *at same time* of **PVCs**
-
-#### Binding
-In this stage, we bind the *storage request*, **PVC**, to the **PV** that was provisioned earlier stage. So typically, the developer creates this **PVC** to request the specific amount of storage and access modes. 
-
-A control loop on K8s Master watches for any new **PVCs** and binds the matching **PV** (might be the volume *can be in excess* of what was requested, *but not too much*) if it's available. If a matching volume does not exis, **PVC** will wait until the matching volumes become available (for ex: wait until new **PV** is added to cluster, etc)
-
-#### Using
-**Pods** use claims as volumes and now the **PV** belongs to the users for as long as they need it.
-
-#### Reclaiming
-When a user is done with their volume, they can delete the **PVC** from K8s which allows K8s reclaiming its resources. Technically, K8s has multiple ways to reclaim.
-
-## ConfigMap
-A **ConfigMap**, a dictionary of configuration settings, allows us to decouple environment-specific configuration from **Pods**/containers, which means it keeps our application code separate from our configuration. So this lets us change easily configuration depending on the environment (development, production, testing).
-
-:warning: We must create a **ConfigMap** before referencing it in a **Pod** `spec` (in yaml file).
-
-We can create a **ConfigMap** from:
-- directories
-    - where they contain the configurations files
-- file
-- literal key-value pairs defined on the command line (`--from-literal`) 
-
-Now, where do we place the **ConfigMap** inside the **Pod**, so there are two different ways:
-- mounting it as a **Volume**
-- via environment variables (use `envFrom` in **Pod**'s yaml file)
 
 ## DaemonSet
 How you deploy **only one Pod on every (or subset) Node** inside the cluster? 
 
 **DaemonSet** ensures that all or some Nodes inside the cluster runs *a copy of a* **Pod**. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected.
-
-## Secrets
-- like **ConfigMap** but let us store and manage *sensitive information*, such as passwords, OAuth tokens, and ssh keys. 
-- are created outside of **Pods** and stored along with other configurations inside `etcd` database on K8s Master
-- no more than 1MB
-- are sent only to the target Nodes where the **Pods** demand it, unlike the **ConfigMap** who is broadcasted.
-
-To use a **Secret**, a **Pod** needs to reference the **Secret**, there are two ways
-- As files in a **Volume** mounted
-- Env variables
 
 ## Jobs
 **Job** is a higher level abstraction that uses **Pods** to run a completable task.
