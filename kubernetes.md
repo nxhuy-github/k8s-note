@@ -1,11 +1,56 @@
 # Kubernetes - K8s
 
-# Why we need K8s
+Summary
+- [Why we need K8s](#-1.-Why-we-need-K8s)
+- [Options to use/install Kubernetes](#-2.-Options-to-use/install-Kubernetes)
+- [Features of K8s](#-3.-Features-of-K8s)
+- [Work with K8s](#-4.-Work-with-K8s)
+- [Concepts](#-5.-Concepts)
+    - [Pod(s)](##-5.1-Pod(s))
+        - [Communication between containers in Pod](###-5.1.1-Communication-between-containers-in-Pod)
+        - [Communication between Pods on the same Node](###-5.1.2-Communication-between-Pods-on-the-same-Node)
+        - [Communication between Pods on different Nodes](###-5.1.3-Communication-between-Pods-on-different-Nodes)
+    - [Service](##-5.2-Service)
+        - [Types of Services](###-5.2.1-Types-of-Services)
+            - [ClusterIP [Default]](####-5.2.1.1-ClusterIP-[Default])
+            - [NodePort](####-5.2.1.2-NodePort)
+            - [LoadBalancer](####-5.2.1.3-LoadBalancer)
+        - [Communication between Pods and Services](###-5.2.2-Communication-between-Pods-and-Services)
+    - [ConfigMap](##-5.3-ConfigMap)
+    - [Secrets](##-5.4-Secrets)
+    - [(Storage) Volumes](##-5.5-(Storage)-Volumes)
+        - [emptyDir](###-5.5.1-emptyDir)
+        - [hostPath](###-5.5.2-hostPath)
+        - [gcePersistentDisk](###-5.5.3-gcePersistentDisk)
+        - [PersistentVolumeClaim](###-5.5.4-PersistentVolumeClaim)
+    - [Deployment](##-5.6-Deployment)
+        - [Features](###-5.6.1-Features)
+        - [Types](###-5.6.2-Types)
+    - [StatefulSet](##-5.7-StatefulSet)
+    - [Replication Controller](##-5.8-Replication-Controller)
+    - [ReplicaSet](##-5.9-ReplicaSet)
+    - [Labels & Selectors](##-5.10-Labels-&-Selectors)
+    - [DaemonSet](##-5.11-DaemonSet)
+    - [Job(s)](##-5.12-Jobs)
+- [Architecture of K8s](#-6.-Architecture-of-K8s)
+    - [Master Node Components](##-6.1-Master-Node-Components)
+        - [kube-apiserver](###-6.1.1-kube-apiserver)
+        - [kube-scheduler](###-6.1.2-kube-scheduler)
+        - [kube-controller-manager](###-6.1.3-kube-controller-manager)
+        - [cloud-controller-manager](###-6.1.4-cloud-controller-manager)
+        - [etcd](###-6.1.5-etcd)
+    - [Worker Node Components](##-6.2-Worker-Node-Components)
+        - [kubelet](###-6.2.1-kubelet)
+        - [kube-proxy](###-6.2.2-kube-proxy)
+        - [Container runtime](###-6.2.3-Container-runtime)
+- [References](#-7.-References)
+
+# 1. Why we need K8s
 When a microservice application is deployed in production, it usually has many running containers that need to be allocated the right amount of resources in response to user demands. Also, there is need to ensure that the containers are online, running and communicating with one another. The need to efficiently manage and coordinate clusters of containerized applications gave riseto K8s.
 
 K8s is a software system that addresses the concerns of **deploying, scaling and monitoring containers**. Hence, it is called a ```container orchestrator```. Examples of other container orchestrators are Docker Swarn, Mesos Marathon and Hashicorp Nomad.
 
-# Options to use/install Kubernetes
+# 2. Options to use/install Kubernetes
 - Online K8s Labs
     - Kubernetes Playground
     - Play with K8s
@@ -18,7 +63,7 @@ K8s is a software system that addresses the concerns of **deploying, scaling and
     - AKS - Azure Kubernetes Engine
     - Amazon EKS
 
-# Features of K8s
+# 3. Features of K8s
 - Automation bin packing
     - K8s will take care of packaging the jobs (containers) in bins (servers) in the most efficient way and schedule the container based on the requirements and resource available.
 
@@ -54,7 +99,7 @@ K8s is a software system that addresses the concerns of **deploying, scaling and
 
 <img src="./images/k8s-kubectl-kubelet.png" alt="Warning"/>
 
-# Work with K8s
+# 4. Work with K8s
 To work with Kubernetes, you use ```Kubernetes API objects``` to describe your cluster’s ***desired state*** : what applications or other workloads you want to run, what container images they use, the number of replicas, what network and disk resources you want to make available, and more.
 
 <img src="./images/k8s-desirestate.png" alt="Warning"/>
@@ -68,8 +113,8 @@ To display all K8s objects
 $ kubectl api-resources
 ```
 
-# Concepts
-## Pod(s)
+# 5. Concepts
+## 5.1 Pod(s)
 In fact, K8s doesn't run containers directly, instead, it wraps one or more containers into a higher-level struture called **Pod**.
 
 A Pod contains:
@@ -80,7 +125,7 @@ A Pod contains:
 
 <img src="./images/k8s-pods.png" alt="Pods"/>
 
-### Communication between containers in Pod
+### 5.1.1 Communication between containers in Pod
 In K8s, two containers running in the same **Pod** talk to each other via `localhost` and **port number**. This is because each **Pod** has its own **Network Namespace** so containers in the same **Pod** are in the same **Network Namespace** - they share network resources.
 
 <img src="./images/k8s-same-pod.gif" alt="Same Pod"/>
@@ -89,7 +134,7 @@ We need also to watch out for *port conflicts* when we've got multiple container
 
 In fact, there's a secret container, called `pause` container, that runs on every **Pod** to keep the namespace open in case all the other containers on the **Pod** die.
 
-### Communication between Pods on the same Node
+### 5.1.2 Communication between Pods on the same Node
 
 We know that each **Pod** has its own **Network Namespace** and **a unique IP address**. Besides that, K8s also creates (fakes) a virtual ethernet connection `eth0` to make network requests through. In fact, each `eth0` connects to the Node via a tunnel, called virtual ethernet device. This connection has two sides – on the pod’s side, it’s named `eth0`, and on the node’s side, it’s named `vethX` (there’s a `vethX` connection for every **Pod** on the Node: `veth1`, `veth2`, `veth3`, etc).
 
@@ -99,7 +144,7 @@ To communicate between **Pods**, K8s uses a **Network Bridge**, called `cbr0`. W
 
 Every pod on a node is part of the bridge, and the bridge connects all pods on the same node together.
 
-### Communication between Pods on different Nodes
+### 5.1.3 Communication between Pods on different Nodes
 
 When the **Network Bridge** asks all the connected **Pods** if they have the right IP address and none of them say yes, then, this goes up to the Cluster level and looks for the IP address.
 
@@ -116,7 +161,7 @@ For example: K8s might give
     => `table` store IP address like 100.96.2.xxx for Node 2
 
 
-## Service
+## 5.2 Service
 Imagine that, you have been asked to deploy web app
 - How does this front-end web app is exposed to outside world?
 - How do front-end web app connected to backend database?
@@ -138,11 +183,11 @@ In Kubernetes, a **Service** is an abstraction
 
 Using `selectors`, a **Service** will select the **Pods**' `labels` to get its respective **Pods**.
 
-### Types of Services
-#### ClusterIP [Default]
+### 5.2.1 Types of Services
+#### 5.2.1.1 ClusterIP [Default]
 It is reachable only from **within** the cluster: it gives us a **Service** inside our cluster that other apps inside our cluster can access (for example: we don't want to expose our database to the outside world, in such case, **Service** type ClusterIP is a good option). There is *no external access*.
 
-#### NodePort
+#### 5.2.1.2 NodePort
 **NodePort**, superset of **ClusterIP**, opens **a** specific **port on all** the Nodes of our cluster (in case if we don't mention **NodePort** specifically in the manifest file, then K8s will assign unused **NodePort** dynamically). It makes a **Service** accessible from the outside world using `NodeIP:NodePort`.
 
 Now, we will find out the difference **Port Types** that we can use, look at the picture below
@@ -175,7 +220,7 @@ However, there are some **downsides** when using this type:
 
 :warning: For these reasons, people don’t recommend using this method in production to directly expose our apps. If we are running a app that doesn’t have to be always available, or we are very cost sensitive, this method will work. A good example of such an application is a demo app or something temporary.
 
-#### LoadBalancer
+#### 5.2.1.3 LoadBalancer
 In [the Multi instances in difference Node](####NodePort) scenario of **NodePort** where we have a multiple instances of **Pods** that are deployed on multiple Nodes. The problem with this setup here is to access this app, we can use any of the public IP of the Node and the `NodePort`, so:
 - Which `NodeIP` will we provide to the end-users? 
 - Are they comfortable to use IP and port number to access the app?
@@ -189,11 +234,11 @@ This type, superset of **NodePort**, is the standard way to expose a **Service**
 
 :warning: In reality, in the cloud like GCP or AWS, the **LoadBalancer** is not cheap, every time we create a **Service** of type **LoadBalancer**, it will cost us dollars.
 
-### Communication between Pods and Services
+### 5.2.2 Communication between Pods and Services
 
 This happens via `kube-proxy`.
 
-## ConfigMap
+## 5.3 ConfigMap
 Imagine that we have a **Pod** `my-app` and a **Pod** `DB`. And they work together to create our application. To do that, `my-app` need a database endpoint, let's say `mongo-db-service` which is used to communicate with the database. And usually, this database url or endpoint is configured in `my-app` (like in properties file for ex). That means, the database url is usually inside of the build image of our application. And that causes a problem: if the endpoint changed to, for ex: `mongo-db`, we would have to adjust that url in the application, rebuild the application with the new version, push it to the repo, pull it in our **Pod**, etc. And K8s helps us to solve that by using **ConfigMap**. 
 
 A **ConfigMap**, a dictionary of configuration settings, allows us to decouple environment-specific configuration from **Pods**/containers, which means it keeps our application code separate from our configuration (like database url for ex). So this lets us change easily configuration depending on the environment (development, production, testing).
@@ -210,7 +255,7 @@ Now, where do we place the **ConfigMap** inside the **Pod**, so there are two di
 - mounting it as a **Volume**
 - via environment variables (use `envFrom` in **Pod**'s yaml file)
 
-## Secrets
+## 5.4 Secrets
 - like **ConfigMap** but let us store and manage *sensitive information*, such as passwords, OAuth tokens, and ssh keys. 
 - are created outside of **Pods** and stored along with other configurations inside `etcd` database on K8s Master
 - no more than 1MB
@@ -220,7 +265,7 @@ To use a **Secret**, a **Pod** needs to reference the **Secret**, there are two 
 - As files in a **Volume** mounted
 - Env variables
 
-## (Storage) Volumes
+## 5.5 (Storage) Volumes
 At some point, your apps requires storage where the data is stored and accessed
 - How does this storage volumes are handled inside the K8s?
 - How can data persist beyond **Pod** life?
@@ -239,7 +284,7 @@ In general, we have two principal groups of **Volumes**:
 
 In detail, K8s support multiple types of **Volumes** such as emptyDir, hostPath, configMap, gcePersistentDisk, azureDisk, awsElasticBlockStore, etc. We'll workthrough some of them.
 
-### emptyDir
+### 5.5.1 emptyDir
 - K8s creates the empty directory volume on the Node where **Pod** is scheduled. 
     - After that, the containers inside that **Pod** can write and read the data from this volume. 
 
@@ -248,7 +293,7 @@ In detail, K8s support multiple types of **Volumes** such as emptyDir, hostPath,
 
 - The primary use is for the temporary space and to share data between multiple containers in the **Pod**.
 
-### hostPath
+### 5.5.2 hostPath
 - exposes a file or directory on the Worker Node as a volume inside the **Pod**. 
 - the Data inside the **hostPath** volume remains even after the **Pod** is terminated. 
     - It comes close to the **Docker Volume** concept because, basically, **Docker Volume** will expose the host file system directory as one of the internal directory of container.
@@ -257,7 +302,7 @@ In detail, K8s support multiple types of **Volumes** such as emptyDir, hostPath,
 
 :information_source: So unless we have the specific requirements, don't use **hostPath**.
 
-### gcePersistentDisk
+### 5.5.3 gcePersistentDisk
 - mounts a Google Compute Engince (GCE) Persistent Disk into our **Pod**. 
 - when a **Pod** is removed, the contents of a are preserved. 
 - PD can be mounted as [read-only]() by multiple **Pods** simultaneously, which means that we can pre-populate a PD with your dataset and then serve it in parallel from as many **Pods** as we need. However, PD can only be mounted by a single **Pod** in [read-write]() mode.
@@ -269,7 +314,7 @@ Restriction:
 
 :warning: These restriction are same for AWS or Azure
 
-### PersistentVolumeClaim
+### 5.5.4 PersistentVolumeClaim
 A *PersistentVolumeClaim* (**PVC**) is *a request for Persistent Volumes* by a user.
 
 
@@ -300,7 +345,7 @@ A control loop on K8s Master watches for any new **PVCs** and binds the matching
 #### Reclaiming
 When a user is done with their volume, they can delete the **PVC** from K8s which allows K8s reclaiming its resources. Technically, K8s has multiple ways to reclaim.
 
-## Deployment
+## 5.6 Deployment
 <img src="./images/k8s-deployment.png" alt="Deployment" />
 
 There are a couple of questions we might ask when we try to upgrade an application, for ex: from v1 to v2:
@@ -315,7 +360,7 @@ At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & 
 
 :warning: We can't replicate database using a **Deployment** and the reason is the database has a **state** which is its data. If we have clones or replicas of the database, they would all need to access to the same shared data storage and there we would need some kind of **mechanism** that manages which **Pod(s)** are currently writing to that storage or which **Pod(s)** are reading from the storage in order to avoid **data inconsistencies** and that **mechanism** called **StatefulSet**.
 
-### Features
+### 5.6.1 Features
 - Multiple Replicas
     - If we don't mention `rc` in **Deployment** manifest file, it will create `rc` (replicas = 1) to make sure there's one **Pod** always running.
 - Upgrade
@@ -323,7 +368,7 @@ At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & 
 - Scale up or down
 - Pause and resume
 
-### Types
+### 5.6.2 Types
 - Recreate
     - terminate all the running instances then recreate them with the newer version
     - there is a downtime that depends on both shutdown and boot duration of the application
@@ -343,7 +388,7 @@ At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & 
 
 :information_source: In real world scenario, for each of the applications in our list, we should have to define [one **Deployment** for one application](https://stackoverflow.com/questions/43217006/how-to-configure-a-kubernetes-multi-pod-deployment), for example: if our system has 4 components: API Server, UI Server, Redis cache, Timer task Server => we should create 4 **Deployments** (knowing that one component defined by one **Pod**).
 
-## StatefulSet
+## 5.7 StatefulSet
 This component is just like **Deployment** but it's meant specifically for stateful applications like databases.
 - **Deployment** for stateLESS apps
 - **StatefulSet** for stateFUL apps or databases
@@ -352,7 +397,7 @@ The **StatefulSet** would take care of replicating the **Pod(s)** and scaling th
 
 :pushpin: Deploying database applications using **StatefulSet** in K8s cluster can be somewhat tedious. So it's definitely more difficult than working with **Deployment(s)** where we don't have all these challenges. That's why it's also a common practice to host database applications outside of the K8s cluster.
 
-## Replication Controller
+## 5.8 Replication Controller
 This object (`rc` for short) ensures that a specified number of **Pod** replicas are running at any one time. 
 
 - If there are too many **Pods** => `rc` terminates the extra **Pods**
@@ -363,12 +408,12 @@ In fact, `rc` is kind of *OLD*, and is replaced by **ReplicaSet**, the next gene
 - `rc` supports *equality-based selector*
 - **ReplicaSet** supports *set-based selector*
 
-## ReplicaSet
+## 5.9 ReplicaSet
 The **ReplicaSet**'s purpose is ensure a specified number of **Pods** are running at any time.
 
 The **ReplicaSet** and **Pods** are associated with `labels`.
 
-## Labels & Selectors
+## 5.10 Labels & Selectors
 - `labels` are key/value pairs that are attached to objects, such as **Pods**.
 
 - `selectors` helps us identify a set of objects. 
@@ -393,19 +438,19 @@ The K8s currently supports two types of `selectors`: *equality-based* and *set-b
 
 :information_source: we use `matchLabels` when we have **key** of `labels` associated with **only one value**. In case there are **a set of value** to select from, we use `matchExpressions`. 
 
-## DaemonSet
+## 5.11 DaemonSet
 How you deploy **only one Pod on every (or subset) Node** inside the cluster? 
 
 **DaemonSet** ensures that all or some Nodes inside the cluster runs *a copy of a* **Pod**. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected.
 
-## Jobs
+## 5.12 Jobs
 **Job** is a higher level abstraction that uses **Pods** to run a completable task.
 
 There a two types:
 - Run-to-completion aka **Jobs**
 - Scheduled aka **CronJob**
 
-# Architecture of K8s
+# 6. Architecture of K8s
 
 <img src="./images/k8s-architecture.png" alt="Architecture"/>
 
@@ -426,16 +471,16 @@ The main components of K8s engine are:
     - kube-proxy
     - container run time
 
-## Master Node Components
-### kube-apiserver
+## 6.1 Master Node Components
+### 6.1.1 kube-apiserver
 In K8s world, the `kube-apiserver` is responsible for all the communication (only one entry point to the cluster). The `kube-apiserver` exposes some APIs, for almost every operation, so that the users can interact. And to use (call) these APIs, we can use the command-line tools (like `kubectl`) or from a UI (like K8s dashboard) or K8s Client Library. 
 
-### kube-scheduler
+### 6.1.2 kube-scheduler
 The `kube-scheduler` is a component that schedules **Pods** across multiple nodes. We know that in K8s, Worker Nodes can be a physical or virtual machines and they can have different infrastructure or hardware configuration. In fact, the `kube-scheduler` knows about these informations and whenever it has to schedule **Pod(s)**, it will check what node will fit best for the configuration or hardware requirements of the **Pod(s)**.
 
 :pushpin: the `kube-scheduler` **just decides** on which Node new **Pod** should be scheduled. The process that actually starts that **Pod** with a container is `kubelet`.
 
-### kube-controller-manager
+### 6.1.3 kube-controller-manager
 The `kube-control-manager` runs watch-loops continuously to compare cluster's desired state to its current state (obtained from `etcd` data store via the `kube-apiserver`). In case of a mismatch, corrective action is taken in the cluster until its current state matches the desire state.
 
 The `kube-control-mangager` includes:
@@ -446,7 +491,7 @@ The `kube-control-mangager` includes:
 
 ***Note***: each controller is separate process, but to reduce complexity, they are all compiled into a single binary and run in a single process.
 
-### cloud-controller-manager
+### 6.1.4 cloud-controller-manager
 When we are using the infrastructure of a Cloud Provider, all monitors that need to run for interacting with Cloud Service Provider of this infrastructure is done through `cloud-controller-manager`.
 
 The `cloud-controller-manager` includes:
@@ -454,7 +499,7 @@ The `cloud-controller-manager` includes:
 - Route controller
 - Service controller
 
-### etcd
+### 6.1.5 etcd
 - Open source, distributed key-value database from CoreOS
 - Single source of truth for all components of the K8s cluster
 
@@ -464,27 +509,25 @@ If the K8s cluster has multiple master nodes, the `etcd` forms a distributed sto
 
 ***Note***: Only the `kube-apiserver` is the component that can directly interact with the `etcd` data store. There is **no** other component that can interact with `etcd` directly. And the applications data is not stored in `etcd`!!!.
 
-## Worker Node Components
+## 6.2 Worker Node Components
 
 These components run on every node, maintaining running **Pod(s)** and providing the K8s runtime environment. In fact, we have 3 processes must be installed on every Node.
 
-The first process that need to run on every node is the **Container Run Time** (for ex: Docker)
-
-### kubelet
+### 6.2.1 kubelet
 The `kubelet` is the component that interacts with the Master Node via the `kube-apiserver`. Technically, the `kubelet` gets the informations from some **specs** called `PodSpecs` and based on those specifications, it makes sure the containers are running accordingly on the **Pod(s)**. In case there is any issue with any **Pod(s)**, it will try to restart the **Pod(s)** on the same node or if required, it will start the **Pod(s)** on a different node.
 
 ***Note***: `kubelet` only manages the containers which are created by the K8s. In case you have the containers running on the node or the machine which were not create by K8s, `kubelet` will not manage those containers.
 
-### kube-proxy
+### 6.2.2 kube-proxy
 The `kube-proxy` is the core networking component in a node, it maintains the network configuration and can also interact with the external world.
 
 ***Note***: `kube-proxy` watches the `kube-apiserver` on the Master Node for the addition and removal of **Service(s)** and endpoint(s).
 
-### Container runtime
-This is responsible for running containers
+### 6.2.3 Container runtime
+This is responsible for running containers (for ex: Docker)
 
 
-# References
+# 7. References
 [1] https://kubernetes.io/docs/concepts/
 
 [2] https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-networking-guide-beginners.html
