@@ -1,7 +1,7 @@
 # Kubernetes - K8s
 
 Summary
-- [Why we need K8s](#-1.-Why-we-need-K8s)
+- [Why we need K8s](#-1-Why-we-need-K8s)
 - [Options to use/install Kubernetes](#-2.-Options-to-use/install-Kubernetes)
 - [Features of K8s](#-3.-Features-of-K8s)
 - [Work with K8s](#-4.-Work-with-K8s)
@@ -45,7 +45,7 @@ Summary
         - [Container runtime](###-6.2.3-Container-runtime)
 - [References](#-7.-References)
 
-# 1. Why we need K8s
+# 1 Why we need K8s
 When a microservice application is deployed in production, it usually has many running containers that need to be allocated the right amount of resources in response to user demands. Also, there is need to ensure that the containers are online, running and communicating with one another. The need to efficiently manage and coordinate clusters of containerized applications gave riseto K8s.
 
 K8s is a software system that addresses the concerns of **deploying, scaling and monitoring containers**. Hence, it is called a ```container orchestrator```. Examples of other container orchestrators are Docker Swarn, Mesos Marathon and Hashicorp Nomad.
