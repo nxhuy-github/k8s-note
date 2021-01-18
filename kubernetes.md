@@ -300,6 +300,58 @@ A control loop on K8s Master watches for any new **PVCs** and binds the matching
 #### Reclaiming
 When a user is done with their volume, they can delete the **PVC** from K8s which allows K8s reclaiming its resources. Technically, K8s has multiple ways to reclaim.
 
+## Deployment
+<img src="./images/k8s-deployment.png" alt="Deployment" />
+
+There are a couple of questions we might ask when we try to upgrade an application, for ex: from v1 to v2:
+- upgrade with zero downtime ?
+- upgrade sequentially, one after the other ?
+- pause and resume upgrade process ?
+- rollback if error ? 
+
+At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)). The **Deployment** manifest file contains the **Pod** definition, the number of **Pod** replicas that we need and also our prefer upgrade strategy that we want.
+
+:pushpin: In practice, we would not normally be working with **Pod(s)**, we would be creating **Deployment(s)**.
+
+:warning: We can't replicate database using a **Deployment** and the reason is the database has a **state** which is its data. If we have clones or replicas of the database, they would all need to access to the same shared data storage and there we would need some kind of **mechanism** that manages which **Pod(s)** are currently writing to that storage or which **Pod(s)** are reading from the storage in order to avoid **data inconsistencies** and that **mechanism** called **StatefulSet**.
+
+### Features
+- Multiple Replicas
+    - If we don't mention `rc` in **Deployment** manifest file, it will create `rc` (replicas = 1) to make sure there's one **Pod** always running.
+- Upgrade
+- Rollback
+- Scale up or down
+- Pause and resume
+
+### Types
+- Recreate
+    - terminate all the running instances then recreate them with the newer version
+    - there is a downtime that depends on both shutdown and boot duration of the application
+
+- RollingUpdate (Ramped) [**Default**]
+    - It works by slowly: a secondary `rc` is created with the new version, then replacing **Pods** of the previous version of your application with **Pods** of the new version (one by one) until the correct number of replicas is reached.
+
+- Canary - let the user do the testing
+    - routes a **subset of users** to a new functionality (to get user feedback for new features, for ex). And when no errors reported, the new version can gradually roll out to the rest of the infrastructure. So basically, this is an ideal strategy for someone who want to test new version before it's deployed 100%.
+    - <img src="./images/k8s-canary.png" alt="Canary"/>
+
+- Blue / Green
+    - the **Green** (new one) version of the application is deployed alongside the **Blue** (old one) version. But the **Blue** still receives *all user traffic* (which means handle user request) whereas the **Green** is *idle* for testing. Once the testing results are successful, application traffic is routed from **Blue** to **Green**.
+    - <img src="./images/k8s-bluegreen.png" alt="BlueGreen"/>
+
+<br/>
+
+:information_source: In real world scenario, for each of the applications in our list, we should have to define [one **Deployment** for one application](https://stackoverflow.com/questions/43217006/how-to-configure-a-kubernetes-multi-pod-deployment), for example: if our system has 4 components: API Server, UI Server, Redis cache, Timer task Server => we should create 4 **Deployments** (knowing that one component defined by one **Pod**).
+
+## StatefulSet
+This component is just like **Deployment** but it's meant specifically for stateful applications like databases.
+- **Deployment** for stateLESS apps
+- **StatefulSet** for stateFUL apps or databases
+
+The **StatefulSet** would take care of replicating the **Pod(s)** and scaling them up or down but making sure the database reads and writes are synchronized so that no database inconsistencies are offered
+
+:pushpin: Deploying database applications using **StatefulSet** in K8s cluster can be somewhat tedious. So it's definitely more difficult than working with **Deployment(s)** where we don't have all these challenges. That's why it's also a common practice to host database applications outside of the K8s cluster.
+
 ## Replication Controller
 This object (`rc` for short) ensures that a specified number of **Pod** replicas are running at any one time. 
 
@@ -341,47 +393,6 @@ The K8s currently supports two types of `selectors`: *equality-based* and *set-b
 
 :information_source: we use `matchLabels` when we have **key** of `labels` associated with **only one value**. In case there are **a set of value** to select from, we use `matchExpressions`. 
 
-## Deployment
-<img src="./images/k8s-deployment.png" alt="Deployment" />
-
-There are a couple of questions we might ask when we try to upgrade an application, for ex: from v1 to v2:
-- upgrade with zero downtime ?
-- upgrade sequentially, one after the other ?
-- pause and resume upgrade process ?
-- rollback if error ? 
-
-At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)). The **Deployment** manifest file contains the **Pod** definition, the number of **Pod** replicas that we need and also our prefer upgrade strategy that we want.
-
-### Features
-- Multiple Replicas
-    - If we don't mention `rc` in **Deployment** manifest file, it will create `rc` (replicas = 1) to make sure there's one **Pod** always running.
-- Upgrade
-- Rollback
-- Scale up or down
-- Pause and resume
-
-### Types
-- Recreate
-    - terminate all the running instances then recreate them with the newer version
-    - there is a downtime that depends on both shutdown and boot duration of the application
-
-- RollingUpdate (Ramped) [**Default**]
-    - It works by slowly: a secondary `rc` is created with the new version, then replacing **Pods** of the previous version of your application with **Pods** of the new version (one by one) until the correct number of replicas is reached.
-
-- Canary - let the user do the testing
-    - routes a **subset of users** to a new functionality (to get user feedback for new features, for ex). And when no errors reported, the new version can gradually roll out to the rest of the infrastructure. So basically, this is an ideal strategy for someone who want to test new version before it's deployed 100%.
-    - <img src="./images/k8s-canary.png" alt="Canary"/>
-
-- Blue / Green
-    - the **Green** (new one) version of the application is deployed alongside the **Blue** (old one) version. But the **Blue** still receives *all user traffic* (which means handle user request) whereas the **Green** is *idle* for testing. Once the testing results are successful, application traffic is routed from **Blue** to **Green**.
-    - <img src="./images/k8s-bluegreen.png" alt="BlueGreen"/>
-
-<br/>
-
-:information_source: In real world scenario, for each of the applications in our list, we should have to define [one **Deployment** for one application](https://stackoverflow.com/questions/43217006/how-to-configure-a-kubernetes-multi-pod-deployment), for example: if our system has 4 components: API Server, UI Server, Redis cache, Timer task Server => we should create 4 **Deployments** (knowing that one component defined by one **Pod**).
-
-
-
 ## DaemonSet
 How you deploy **only one Pod on every (or subset) Node** inside the cluster? 
 
@@ -401,6 +412,7 @@ There a two types:
 The main components of K8s engine are:
 - Master Node
     - run on single node
+        - in reality, the K8s cluster is made up of multiple masters
     - responsible for managing the cluster: monitor nodes & **Pods** in a cluster
     - 5 components:
         - kube-apiserver
@@ -412,13 +424,16 @@ The main components of K8s engine are:
 - Worker Node (or just Node)
     - kubelet
     - kube-proxy
+    - container run time
 
 ## Master Node Components
 ### kube-apiserver
-In K8s world, the `kube-apiserver` is responsible for all the communication. The `kube-apiserver` exposes some APIs, for almost every operation, so that the users can interact. And to use (call) these APIs, we can use the command-line tools (like `kubectl`) or from a UI.
+In K8s world, the `kube-apiserver` is responsible for all the communication (only one entry point to the cluster). The `kube-apiserver` exposes some APIs, for almost every operation, so that the users can interact. And to use (call) these APIs, we can use the command-line tools (like `kubectl`) or from a UI (like K8s dashboard) or K8s Client Library. 
 
 ### kube-scheduler
 The `kube-scheduler` is a component that schedules **Pods** across multiple nodes. We know that in K8s, Worker Nodes can be a physical or virtual machines and they can have different infrastructure or hardware configuration. In fact, the `kube-scheduler` knows about these informations and whenever it has to schedule **Pod(s)**, it will check what node will fit best for the configuration or hardware requirements of the **Pod(s)**.
+
+:pushpin: the `kube-scheduler` **just decides** on which Node new **Pod** should be scheduled. The process that actually starts that **Pod** with a container is `kubelet`.
 
 ### kube-controller-manager
 The `kube-control-manager` runs watch-loops continuously to compare cluster's desired state to its current state (obtained from `etcd` data store via the `kube-apiserver`). In case of a mismatch, corrective action is taken in the cluster until its current state matches the desire state.
@@ -430,7 +445,6 @@ The `kube-control-mangager` includes:
 - Service Account & Token controller
 
 ***Note***: each controller is separate process, but to reduce complexity, they are all compiled into a single binary and run in a single process.
-
 
 ### cloud-controller-manager
 When we are using the infrastructure of a Cloud Provider, all monitors that need to run for interacting with Cloud Service Provider of this infrastructure is done through `cloud-controller-manager`.
@@ -444,11 +458,17 @@ The `cloud-controller-manager` includes:
 - Open source, distributed key-value database from CoreOS
 - Single source of truth for all components of the K8s cluster
 
-***Note***: Only the `kube-apiserver` is the component that can directly interact with the `etcd` data store. There is **no** other component that can interact with `etcd` directly.
+This is the **cluster brain** which means that every change in the cluster get saved or updated into this key-value store. 
+
+If the K8s cluster has multiple master nodes, the `etcd` forms a distributed storage across all the master nodes.
+
+***Note***: Only the `kube-apiserver` is the component that can directly interact with the `etcd` data store. There is **no** other component that can interact with `etcd` directly. And the applications data is not stored in `etcd`!!!.
 
 ## Worker Node Components
 
-These components run on every node, maintaining running **Pod(s)** and providing the K8s runtime environment. 
+These components run on every node, maintaining running **Pod(s)** and providing the K8s runtime environment. In fact, we have 3 processes must be installed on every Node.
+
+The first process that need to run on every node is the **Container Run Time** (for ex: Docker)
 
 ### kubelet
 The `kubelet` is the component that interacts with the Master Node via the `kube-apiserver`. Technically, the `kubelet` gets the informations from some **specs** called `PodSpecs` and based on those specifications, it makes sure the containers are running accordingly on the **Pod(s)**. In case there is any issue with any **Pod(s)**, it will try to restart the **Pod(s)** on the same node or if required, it will start the **Pod(s)** on a different node.
@@ -482,5 +502,7 @@ This is responsible for running containers
 [8] https://stackoverflow.com/questions/41963433/what-does-it-mean-for-a-service-to-be-of-type-nodeport-and-have-both-port-and-t?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 
 [9] https://www.youtube.com/playlist?list=PLMPZQTftRCS8Pp4wiiUruly5ODScvAwcQ
+
+[10] https://www.youtube.com/watch?v=X48VuDVv0do
 
 
