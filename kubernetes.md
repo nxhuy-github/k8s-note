@@ -1,7 +1,7 @@
 # Kubernetes - K8s
 
 Summary
-- [Why we need K8s](#-1-Why-we-need-K8s)
+- [Why we need K8s](#-1.-Why-we-need-K8s)
 - [Options to use/install Kubernetes](#-2.-Options-to-use/install-Kubernetes)
 - [Features of K8s](#-3.-Features-of-K8s)
 - [Work with K8s](#-4.-Work-with-K8s)
