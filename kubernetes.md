@@ -413,6 +413,8 @@ The **ReplicaSet**'s purpose is ensure a specified number of **Pods** are runnin
 
 The **ReplicaSet** and **Pods** are associated with `labels`.
 
+:pushpin: In practice, we'll never have to create or delete or update in any way **ReplicaSet**, we're going to be working directly with **Deployment**.
+
 ## 5.10 Labels & Selectors
 - `labels` are key/value pairs that are attached to objects, such as **Pods**.
 
@@ -525,6 +527,20 @@ The `kube-proxy` is the core networking component in a node, it maintains the ne
 
 ### 6.2.3 Container runtime
 This is responsible for running containers (for ex: Docker)
+
+:information_source: From K8s v1.20, Docker support in the `kubelet` is now deprecated !!!
+
+Like we known, K8s supports different **Container runtime** and one of them being Docker, which is also one of the most popular container tools out there.
+
+So let's say we deloyed Docker Engine on a K8s worker node, Docker Engine comes with 3 components: Docker-Server, Docker-API and CLI. The Docker-Server itself has some components like **Container runtime**, Volumes, Network, etc. In fact, the only part that K8s needs in order to run the containers inside the cluster is the **Container runtime**. So K8s doesn't actually need all of those features that Docker offer because K8s has its own features. 
+
+And for K8s to actually talk to and use this **Container runtime** component, it needs to interact with Docker first. And for this interaction, K8s uses **Dockershim**, which is basically part of or has been part of K8s code. And this is what K8s is actually removing. 
+
+The **Container runtime** that Docker uses is **container-d**, which was part of Docker Daemon code and Docker has extracted it as a **separated component**, so it can be deployed as a standalone **Container runtime** and used in K8s cluster. In fact, **container-d** is the 2nd most popular alternative to using Docker as runtime and is already being used by major cloud platforms in K8s cluster (AWS-EKS, GKE, etc). Another alternative **Container runtime** is **cri-o** which is used by Openshift.
+
+Now, how are the images (built by Docker) going to run in K8s cluster where there's no Docker installed ?? And the answer is very simple: every Docker image can run on any **Container runtime**. And the reason for this compability is **all container tools are all compatible with each other because they're using standards defined by OCI (open container initiative)**. The OCI is basically a project of Linux Foundation that standardizes how container technology should work and how they should be implemented.
+
+Conclure, no impact !!! 
 
 
 # 7. References
