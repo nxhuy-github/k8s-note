@@ -32,6 +32,9 @@ Summary
     - [Labels & Selectors](##-5.10-Labels-&-Selectors)
     - [DaemonSet](##-5.11-DaemonSet)
     - [Job(s)](##-5.12-Jobs)
+    - [Namespaces](##-5.13-Namespaces)
+        - [Need of **Namespace**](###-5.13.1-Need-of-Namespace)
+        - [Characteristics](###-5.13.2-Characteristics)
 - [Architecture of K8s](#-6.-Architecture-of-K8s)
     - [Master Node Components](##-6.1-Master-Node-Components)
         - [kube-apiserver](###-6.1.1-kube-apiserver)
@@ -179,7 +182,7 @@ In Kubernetes, a **Service** is an abstraction
 
 <img src="./images/k8s-service.png" alt="Service"/>
 
-:information_source: The **Domain Name System (DNS)** is a system for associating various types of information – such as IP addresses – with easy-to-remember names. :fast_forward: that means each **Service** has its own DNS name or its own IP addresse.
+:information_source: The **Domain Name System (DNS)** is a system for associating various types of information – such as IP addresses – with easy-to-remember names :fast_forward: that means each **Service** has its own DNS name or its own IP addresse.
 
 Using `selectors`, a **Service** will select the **Pods**' `labels` to get its respective **Pods**.
 
@@ -451,6 +454,55 @@ How you deploy **only one Pod on every (or subset) Node** inside the cluster?
 There a two types:
 - Run-to-completion aka **Jobs**
 - Scheduled aka **CronJob**
+
+## 5.13 Namespaces
+In K8s cluster, we can organize the resources in **Namespaces**, we can have multiple **Namespaces**. We can thank **Namespace** is a virtual cluster inside the K8s cluster. By default, K8s gives us 4 **Namespaces**.
+
+- kube-system
+    - is NOT meant basically for K8s user
+    - do NOT create or modify in kube-system
+    - system processes
+- kube-public
+    - publicely accessible data
+    - has a configmap which contains the cluster information
+- kube-node-lease
+    - holds information about the heartbeats of nodes
+        - each node basically gets its own object that contains the information about that node's availability
+- default
+    - resources we create are located here if we haven't created/associated a new namespace
+
+We can create **Namespace** via `kubectl` or configuration file.
+
+### 5.13.1 Need of **Namespace**
+- No overview
+    - If we have only **default namespace** and we create all our resources inside (**Deployments**, **ReplicaSets**, etc). 
+        - :fast_forward: very soon the **default namespace** is going to be filled
+            - :fast_forward: difficult to have an overview 
+    - Solution: group resources into **Namespaces**.
+
+- Conflict
+    - For ex: 2 teams that use the same cluster 
+        - one teams deploys an application called `my-app deployment`(the name of **Deployment** they created) and it has certain configuration. 
+        - other team has a **Deployment** that accidentally had the same name but a different configuration. 
+            - :fast_forward: They would ovewrite the first team's **Deployment**. 
+    - Solution: we can use **Namespaces** so that each team can work in their own **Namespace** without disrupting the other
+
+- Resources Sharing
+    - one cluster and we want to host both Staging and Development environment. 
+        - for ex we're using something like nginx controller or elasticstack, 
+            - :fast_forward: we can deploy it in one cluster and use it for both environments. 
+        - Another usecase is when we use **Blue/Green deployement** 
+
+- Access and Resource limit
+    - One more usecase for **Namespace** is to limit the resources and access to namespaces when we're working with multiple teams
+
+### 5.13.2 Characteristics
+- we can't access **most** resources from another **Namespace**
+- we can access **Service** in another **Namespace**
+- some components can't be created within a **Namespace**
+    - they live just globally in the cluster
+    - we can't isolate them in a certain **Namespace**
+    - for ex: Volume or Persistent Volume
 
 # 6. Architecture of K8s
 
