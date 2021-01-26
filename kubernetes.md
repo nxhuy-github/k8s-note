@@ -281,6 +281,11 @@ That's when the **Volumes**(for short) comes in. It basically attaches a physica
 
 :warning: K8s doesn't manage data persistance, that means we (the K8s users) are responsible for backing up, replicating and managing the data. 
 
+Storage Requirement
+- Storage that doesn't depend on the **Pod** lifecycle
+- Storage must be available on all nodes
+- Storage needs to survice even if cluster crashes
+
 In general, we have two principal groups of **Volumes**:
 - Ephemeral : same lifetime as **Pods**
 - Durable : Beyond **Pods** lifetime
@@ -318,35 +323,44 @@ Restriction:
 :warning: These restriction are same for AWS or Azure
 
 ### 5.5.4 PersistentVolumeClaim
-A *PersistentVolumeClaim* (**PVC**) is *a request for Persistent Volumes* by a user.
+A *PersistentVolumeClaim* (**PVC**) is *a request for Persistent Volumes* by  developer/K8s user.
 
+In fact, developers have to explicitly configure the application yaml file to use the **Persistent Volume** components. In other words, application has to **claim** that volume storage. To do that, we use **PVC(s)**, which also is created with yaml file.
+
+:anchor: **PVC(s)** needs to be used/referenced in **Pod(s)** yaml configuration file and must be in the same **Namespace** as the **Pod(s)** using claim.
 
 #### :bangbang: About Persistent Volumes
-A *PersistentVolume* (**PV** for short) is a piece of storage in the cluster, which means **PV** is *a resource in the cluster* just like a Node is a cluster resource. So the **PV** lifecycle is independent with **Pods** lifecycle that use the PV.
+A **PersistentVolume** (**PV** for short) is a piece of storage in the cluster, which means **PV** is *a resource in the cluster* just like a RAM/CPU is a cluster resource. So the **PV** lifecycle is independent with **Pods** lifecycle that use the PV.
 
-Lifecycle of PV: Provisioning ----> Binding ----> Using ----> Reclaiming
+Since **PV** is just an abstract component, it must take the storage from the actual physical storage like local hard drive from the cluster nodes or an external NFS server outside of the cluster or Cloud storage like AWS/GS/etc.
 
-#### Provisioning
-In this stage, the typical administrator creates the storage volumes, these volumes can be any storage such as block, nfs, etc. In K8s, these volumes are called **PV**.
+The **PV** need to be there BEFORE the **Pod(s)** that depends on it is created.
 
-There are two ways PVs may be provisioned
-- Static
-    - A cluster administrator creates a number of **PVs**
-    - **PVs** need to be create *before* **PVCs**
-- Dynamic
-    - Instead of creating **PVs** manually, we *first create* the **StorageClasses**
-    - **PVs** are created *at same time* of **PVCs**
+Lifecycle of PV: 
+- Provisioning
+    - In this stage, the typical **K8s Administrator** (who sets up and maintains the cluster) creates/configures the actual storage (these volumes can be any storage such as block, nfs, cloud storage, etc) and creates the **PV** components from these backends. In K8s, these volumes are called **PV**.
 
-#### Binding
-In this stage, we bind the *storage request*, **PVC**, to the **PV** that was provisioned earlier stage. So typically, the developer creates this **PVC** to request the specific amount of storage and access modes. 
+    - There are two ways PVs may be provisioned
+        - Static
+            - A cluster administrator creates a number of **PVs**
+            - **PVs** need to be create *before* **PVCs**
+        - Dynamic
+            - Instead of creating **PVs** manually, we *first create* the **StorageClass(es)**
+            - **PVs** are created by **StorageClass(es)** in order to meet the needs of the claim
 
-A control loop on K8s Master watches for any new **PVCs** and binds the matching **PV** (might be the volume *can be in excess* of what was requested, *but not too much*) if it's available. If a matching volume does not exis, **PVC** will wait until the matching volumes become available (for ex: wait until new **PV** is added to cluster, etc)
+- Binding
+    - In this stage, we bind the *storage request*, **PVC**, to the **PV** that was provisioned earlier stage. So typically, the developer/K8s user creates this **PVC** to request the specific amount of storage and access modes. 
 
-#### Using
-**Pods** use claims as volumes and now the **PV** belongs to the users for as long as they need it.
+    - A control loop on K8s Master watches for any new **PVCs** and binds the matching **PV** (might be the volume *can be in excess* of what was requested, *but not too much*) if it's available. If a matching volume does not exis, **PVC** will wait until the matching volumes become available (for ex: wait until new **PV** is added to cluster, etc)
 
-#### Reclaiming
-When a user is done with their volume, they can delete the **PVC** from K8s which allows K8s reclaiming its resources. Technically, K8s has multiple ways to reclaim.
+- Using
+    - Once the **Pod(s)** finds the matching **PV** through the **PVC**, the volume is then mounted into the **Pod(s)** and then that volume can be mounted into the container inside the **Pod(s)**. If we have multiple containers in the **Pod**, we can decide to mount this volume in all the containers or just some of those.
+
+- Reclaiming
+    - When a user is done with their volume, they can delete the **PVC** from K8s which allows K8s reclaiming its resources. Technically, K8s has multiple ways to reclaim.
+
+#### Why so many abstraction?
+Can we just use one component and configure everything there? Well this actually has a benefit because as a user, meaning a developer, who just wants to deploy their application in the cluster, we don't care about where the actual storage is. We know we want the DB to have persistence and whether the data will leave on the cluster fs, cloud storage, etc, doesn't matter for us as long as the data is safely stored. And we sure don't want to care about setting up these actual storages ourself.
 
 ## 5.6 Deployment
 <img src="./images/k8s-deployment.png" alt="Deployment" />
