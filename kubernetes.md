@@ -194,6 +194,8 @@ When we create a **Service** object
         - list of **Pods** IPs and ports that match the label selector
         - always up-to-date if **Pods** are added or removed
         - has the same name with the **Service** object it's associated with
+    - for ex
+    <img src="./images/k8s-endpoints.png" alt="Endpoints"/>
 - without the label selector
     - we must create **Endpoint** object if we want to use
 
