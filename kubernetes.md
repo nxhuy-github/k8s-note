@@ -149,7 +149,7 @@ Every pod on a node is part of the bridge, and the bridge connects all pods on t
 
 ### 5.1.3 Communication between Pods on different Nodes
 
-When the **Network Bridge** asks all the connected **Pods** if they have the right IP address and none of them say yes, then, this goes up to the Cluster level and looks for the IP address.
+When the **Network Bridge** `cbr0` asks all the connected **Pods** if they have the right IP address and none of them say yes, then, this goes up to the Cluster level and looks for the IP address.
 
 <img src="./images/k8s-node-to-node.gif" alt="Pods on Node"/>
 
@@ -182,16 +182,33 @@ In Kubernetes, a **Service** is an abstraction
 
 <img src="./images/k8s-service.png" alt="Service"/>
 
-:information_source: The **Domain Name System (DNS)** is a system for associating various types of information – such as IP addresses – with easy-to-remember names :fast_forward: that means each **Service** has its own DNS name or its own IP addresse.
+:key: each **Service** has its own DNS name or its own IP addresse. Name and IP addresse of **Service** are stable. The name and IP gets registered with the cluster's built-in **DNS**, or add-on **DNS**.
+
+:information_source: The **Domain Name System (DNS)** is a system for associating various types of information – such as IP addresses – with easy-to-remember names. Every cluster can have a native DNS Service (we might have to manually start it) and every **Pod** in a cluster knows how to use it.
 
 Using `selectors`, a **Service** will select the **Pods**' `labels` to get its respective **Pods**.
+
+When we create a **Service** object 
+- with the label selector
+    - K8s also creates another object called **Endpoint** object
+        - list of **Pods** IPs and ports that match the label selector
+        - always up-to-date if **Pods** are added or removed
+        - has the same name with the **Service** object it's associated with
+- without the label selector
+    - we must create **Endpoint** object if we want to use
+
 
 ### 5.2.1 Types of Services
 #### 5.2.1.1 ClusterIP [Default]
 It is reachable only from **within** the cluster: it gives us a **Service** inside our cluster that other apps inside our cluster can access (for example: we don't want to expose our database to the outside world, in such case, **Service** type ClusterIP is a good option). There is *no external access*.
 
 #### 5.2.1.2 NodePort
-**NodePort**, superset of **ClusterIP**, opens **a** specific **port on all** the Nodes of our cluster (in case if we don't mention **NodePort** specifically in the manifest file, then K8s will assign unused **NodePort** dynamically). It makes a **Service** accessible from the outside world using `NodeIP:NodePort`.
+**NodePort**, superset of **ClusterIP**, opens **a** specific **port on all** the Nodes of our cluster (in case if we don't mention **NodePort** specifically in the manifest file, then K8s will assign unused **NodePort** dynamically). It makes a **Service** accessible from the outside world using `NodeIP:NodePort` or `ClusterIP:XXYYZZ`.
+
+:book: For example
+<img src="./images/k8s-access-service.png" alt="Access"/>
+We could use either `NodeIP:30001` or `10.15.244.182:8080` to access. In fact, `hello-svc:8080` also works!!!
+
 
 Now, we will find out the difference **Port Types** that we can use, look at the picture below
 
@@ -234,6 +251,10 @@ In [the Multi instances in difference Node](####NodePort) scenario of **NodePort
 <img src="./images/k8s-loadbalancer.png" alt="LoadBalancer" />
 
 This type, superset of **NodePort**, is the standard way to expose a **Service** to the internet, by using the load balancer of the current cloud provider (like *Network Load Balancer of GKE*) or creating an external load balancer in the current cloud (if supported). Both ways will give us a **single IP address** (for one **Service**) that will forward all traffic to our **Service**. In this figure above, we need to configure the DNS server to point to this IP address, so the end-users can access the app using the URL [myapp.com]().
+
+:book: For example
+<img src="./images/k8s-access-loadbalancer.png" alt="Access-LoadBalancer" />
+Taping `35.228.74.4:8080` in browser, we could access the application. 
 
 :warning: In reality, in the cloud like GCP or AWS, the **LoadBalancer** is not cheap, every time we create a **Service** of type **LoadBalancer**, it will cost us dollars.
 
@@ -588,6 +609,16 @@ The `kubelet` is the component that interacts with the Master Node via the `kube
 
 ### 6.2.2 kube-proxy
 The `kube-proxy` is the core networking component in a node, it maintains the network configuration and can also interact with the external world.
+
+- IPTABLES mode
+    - default since K8s 1.2
+    - doesn't scale well
+    - not really designed for load balancing
+- IPVS mode
+    - stable (GA) since K8s 1.11
+    - uses Linux Kernel IP virtual Server
+    - native layer-4 load balancer
+    - support more algo
 
 ***Note***: `kube-proxy` watches the `kube-apiserver` on the Master Node for the addition and removal of **Service(s)** and endpoint(s).
 
