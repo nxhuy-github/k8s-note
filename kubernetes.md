@@ -372,6 +372,7 @@ Here we have a simple use case
 
 
 Look at the YAML file below
+
 <img src="./images/k8s-pv-pvc-storageclass-2.png" alt="PV-PVC-STORAGECLASS-2" />
 
 Now we can see this **PVC** doesn't specify the `storageClassName` attribute. So how does it work? In fact, the **PVC** will reference to the **default StorageClass** of cluster.
