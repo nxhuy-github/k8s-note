@@ -19,10 +19,8 @@ Summary
     - [ConfigMap](##-5.3-ConfigMap)
     - [Secrets](##-5.4-Secrets)
     - [(Storage) Volumes](##-5.5-(Storage)-Volumes)
-        - [emptyDir](###-5.5.1-emptyDir)
-        - [hostPath](###-5.5.2-hostPath)
-        - [gcePersistentDisk](###-5.5.3-gcePersistentDisk)
-        - [PersistentVolumeClaim](###-5.5.4-PersistentVolumeClaim)
+        - [PersistentVolumeClaim & Persistent Volumes & StorageClass](###-5.5.1-PersistentVolumeClaim-&-Persistent-Volumes-&-StorageClass)
+        - [Types of Volumes](###-5.5.2-Types-of-Volumes)
     - [Deployment](##-5.6-Deployment)
         - [Features](###-5.6.1-Features)
         - [Types](###-5.6.2-Types)
@@ -315,44 +313,15 @@ In general, we have two principal groups of **Volumes**:
 
 In detail, K8s support multiple types of **Volumes** such as emptyDir, hostPath, configMap, gcePersistentDisk, azureDisk, awsElasticBlockStore, etc. We'll workthrough some of them.
 
-### 5.5.1 emptyDir
-- K8s creates the empty directory volume on the Node where **Pod** is scheduled. 
-    - After that, the containers inside that **Pod** can write and read the data from this volume. 
-
-- Data stays as long as the **Pod** is alive. 
-    - So once **Pod** is removed from a Node, the **emptyDir** is deleted and the data inside is wipe out forever. 
-
-- The primary use is for the temporary space and to share data between multiple containers in the **Pod**.
-
-### 5.5.2 hostPath
-- exposes a file or directory on the Worker Node as a volume inside the **Pod**. 
-- the Data inside the **hostPath** volume remains even after the **Pod** is terminated. 
-    - It comes close to the **Docker Volume** concept because, basically, **Docker Volume** will expose the host file system directory as one of the internal directory of container.
-
-:warning: We need to be very *cautious* when using this type of volume inside the production environment. Because, when the **Pod** is scheduled on the multiple Worker Nodes, then K8s will create the **hostPath** volume on each Worker Node -> Worker Nodes will have their own exclusive **hostPath** volume which may not be insync and the **Pods** will deal the different storage.
-
-:information_source: So unless we have the specific requirements, don't use **hostPath**.
-
-### 5.5.3 gcePersistentDisk
-- mounts a Google Compute Engince (GCE) Persistent Disk into our **Pod**. 
-- when a **Pod** is removed, the contents of a are preserved. 
-- PD can be mounted as [read-only]() by multiple **Pods** simultaneously, which means that we can pre-populate a PD with your dataset and then serve it in parallel from as many **Pods** as we need. However, PD can only be mounted by a single **Pod** in [read-write]() mode.
-
-Restriction:
-- must create PD before use it
-- Worker Nodes, on which **Pods** are running, must be GCE VMs
-- those VMs need to be in same GCE project and zone as the PD
-
-:warning: These restriction are same for AWS or Azure
-
-### 5.5.4 PersistentVolumeClaim
+### 5.5.1 PersistentVolumeClaim & Persistent Volumes & StorageClass
+#### :dart: About PersistentVolumeClaim :books:
 A *PersistentVolumeClaim* (**PVC**) is *a request for Persistent Volumes* by  developer/K8s user.
 
 In fact, developers have to explicitly configure the application yaml file to use the **Persistent Volume** components. In other words, application has to **claim** that volume storage. To do that, we use **PVC(s)**, which also is created with yaml file.
 
 :anchor: **PVC(s)** needs to be used/referenced in **Pod(s)** yaml configuration file and must be in the same **Namespace** as the **Pod(s)** using claim.
 
-#### :bangbang: About Persistent Volumes
+#### :dart: About Persistent Volumes :books:
 A **PersistentVolume** (**PV** for short) is a piece of storage in the cluster, which means **PV** is *a resource in the cluster* just like a RAM/CPU is a cluster resource. So the **PV** lifecycle is independent with **Pods** lifecycle that use the PV.
 
 Since **PV** is just an abstract component, it must take the storage from the actual physical storage like local hard drive from the cluster nodes or an external NFS server outside of the cluster or Cloud storage like AWS/GS/etc.
@@ -368,8 +337,8 @@ Lifecycle of PV:
             - A cluster administrator creates a number of **PVs**
             - **PVs** need to be create *before* **PVCs**
         - Dynamic
-            - Instead of creating **PVs** manually, we *first create* the **StorageClass(es)**
-            - **PVs** are created by **StorageClass(es)** in order to meet the needs of the claim
+            - Instead of creating **PVs** manually, we *first create* the **StorageClass**
+            - **PVs** are created by **StorageClass** in order to meet the needs of the claim
 
 - Binding
     - In this stage, we bind the *storage request*, **PVC**, to the **PV** that was provisioned earlier stage. So typically, the developer/K8s user creates this **PVC** to request the specific amount of storage and access modes. 
@@ -381,6 +350,47 @@ Lifecycle of PV:
 
 - Reclaiming
     - When a user is done with their volume, they can delete the **PVC** from K8s which allows K8s reclaiming its resources. Technically, K8s has multiple ways to reclaim.
+
+:book: we have a **PVC** and **PV** like below
+<img src="./images/k8s-pv-pvc.png" alt="PV-PVC" />
+Here, the **PVC** must
+- matchs the `accessMode`, `storageClassname` of the **PV**
+- had a storage request <= storage of **PV**
+
+And with this image below, we have a simple use case where a **Pod** uses a **PVC** to gain a 20 GB disk
+<img src="./images/k8s-pv-pvc-pod.png" alt="PV-PVC-POD" />
+
+#### :dart: About StorageClass :books:
+Like we said, **StorageClass** helps us create **PV** dynamically.
+
+<img src="./images/k8s-pv-pvc-storageclass.png" alt="PV-PVC-STORAGECLASS" />
+Here we have a simple use case
+
+- a **StorageClass** with `metadata/name = sc-fast` 
+- a **PVC** that comes to request this **StorageClass** via `storageClassName = metadata/name = sc-fast` 
+- a **Pod** that use this **PVC**
+
+
+Look at the YAML file below
+<img src="./images/k8s-pv-pvc-storageclass-2.png" alt="PV-PVC-STORAGECLASS-2" />
+
+Now we can see this **PVC** doesn't specify the `storageClassName` attribute. So how does it work? In fact, the **PVC** will reference to the **default StorageClass** of cluster.
+
+<img src="./images/k8s-pv-pvc-storageclass-default.png" alt="PV-PVC-STORAGECLASS-DEFAULT" />
+
+For example, the **default StorageClass** in the **K8s/Azure-AKS** is called `default` (just a coincidence in this case :sweat_smile:). And when we apply our YAML file, we'll see
+- a **PVC** looks like this `storageClassName = default`
+<img src="./images/k8s-pv-pvc-storageclass-default-2.png" alt="PV-PVC-STORAGECLASS-DEFAULT-2" />
+
+- a **PV** looks like this `storageClassName = default`
+<img src="./images/k8s-pv-pvc-storageclass-default-3.png" alt="PV-PVC-STORAGECLASS-DEFAULT-3" />
+
+### 5.5.2 Types of Volumes
+Kubernetes supports several types of volumes
+- hostPath
+- emptyDir
+- gcePersistentDisk
+- etc
 
 #### Why so many abstraction?
 Can we just use one component and configure everything there? Well this actually has a benefit because as a user, meaning a developer, who just wants to deploy their application in the cluster, we don't care about where the actual storage is. We know we want the DB to have persistence and whether the data will leave on the cluster fs, cloud storage, etc, doesn't matter for us as long as the data is safely stored. And we sure don't want to care about setting up these actual storages ourself.
