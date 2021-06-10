@@ -289,6 +289,7 @@ To use a **Secret**, a **Pod** needs to reference the **Secret**, there are two 
 - As files in a **Volume** mounted
     - :warning: Look at this example
     <img src="./images/k8s-two-secrets.png" alt="Two-Secrets" />
+    
     We have two **Secrets** that were mounted into the **Pod** but each `volumeMounts->mountPath` must be **unique**. In this example, if you apply this file, K8s will throw you an error `'Invalid value: "/var/secret": must be unique` during pod validation step.
     - To have two or more **Secrets** in the same directory, we could use [Projected Volume](https://kubernetes.io/docs/tasks/configure-pod-container/configure-projected-volume-storage/)
     <img src="./images/k8s-two-secrets-pv.png" alt="Two-Secrets-PV" />
