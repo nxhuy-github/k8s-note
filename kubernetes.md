@@ -114,6 +114,14 @@ To display all K8s objects
 $ kubectl api-resources
 ```
 
+
+:page_facing_up: **kubeconfig files**
+
+Use kubeconfig files to organize information about clusters, users, namespaces, and authentication mechanisms. The `kubectl` command-line tool uses kubeconfig files to find the information it needs to choose a cluster and communicate with the API server of a cluster.
+
+By default, `kubectl` looks for a file named `config` in the `$HOME/.kube` directory. We can specify other kubeconfig files by setting the `KUBECONFIG` *environment variable* or by setting the `--kubeconfig` flag.
+
+
 # 5. Concepts
 ## 5.1 Pod(s)
 In fact, K8s doesn't run containers directly, instead, it wraps one or more containers into a higher-level struture called **Pod**.
