@@ -520,6 +520,8 @@ There a two types:
 - Run-to-completion aka **Jobs**
 - Scheduled aka **CronJob**
 
+A little bit about **Job** and **Deployment**: Both **Job** and **Deployment** use the `PodTemplate` because of course they manage **Pod**s. However, the **main difference** between two objects is how they handle a **Pod**. A **Deployment** is intended to be a "service", e.g. it should be up-and-running, so it will try to restart the **Pod**s it manage, to match the desired number of replicas. While a **Job** is intended to execute and successfully terminate. If we take a look closer, in a **Deployment**, the default `restartPolicy` of **Pod** is set `Always` meanwhile in a **Job** is `Never`. So **Job** is not meant to restart our container once it would have exited and **Deployment** is not meant to exit.
+
 ## 5.13 Namespaces
 In K8s cluster, we can organize the resources in **Namespaces**, we can have multiple **Namespaces**. We can thank **Namespace** is a virtual cluster inside the K8s cluster. By default, K8s gives us 4 **Namespaces**.
 
@@ -691,4 +693,9 @@ Conclure, no impact !!!
 
 [10] https://www.youtube.com/watch?v=X48VuDVv0do
 
+[11] https://stackoverflow.com/questions/68906801/what-is-difference-between-kubernetes-jobs-deployments
+
+[12] https://stackoverflow.com/questions/69448131/kubernetes-whats-the-difference-between-deployment-and-replica-set
+
+[13] https://stackoverflow.com/questions/41325087/what-is-the-difference-between-a-pod-and-a-deployment
 
