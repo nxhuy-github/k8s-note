@@ -419,7 +419,7 @@ There are a couple of questions we might ask when we try to upgrade an applicati
 - pause and resume upgrade process ?
 - rollback if error ? 
 
-At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)). The **Deployment** manifest file contains the **Pod** definition, the number of **Pod** replicas that we need and also our prefer upgrade strategy that we want.
+At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)). The **Deployment** manifest file contains the **Pod** definition, the number of **Pod** replicas that we need and also our prefer upgrade strategy that we want. In other words, a **Deployment** is a higher abstraction that manages one or more **Replicaset**s to provide controlled **rollout of a new version**. As long as we don't have a rollout in progress, a **Deployment** will result in a single **Replicaset** with the replication factor managed by the **Deployment**.
 
 :pushpin: In practice, we would not normally be working with **Pod(s)**, we would be creating **Deployment(s)**.
 
@@ -472,13 +472,16 @@ This object (`rc` for short) ensures that a specified number of **Pod** replicas
 In fact, `rc` is kind of *OLD*, and is replaced by **ReplicaSet**, the next generation. The difference is:
 - `rc` supports *equality-based selector*
 - **ReplicaSet** supports *set-based selector*
+- `rc` **doesn't** have `Revision` history 
 
 ## 5.9 ReplicaSet
 The **ReplicaSet**'s purpose is ensure a specified number of **Pods** are running at any time.
 
 The **ReplicaSet** and **Pods** are associated with `labels`.
 
-:pushpin: In practice, we'll never have to create or delete or update in any way **ReplicaSet**, we're going to be working directly with **Deployment**.
+:pushpin: In practice, we'll never have to create or delete or update in any way **ReplicaSet**, we're going to be working directly with **Deployment**. An example concrete for this fact: Lets say we use **ReplicaSet-A** for controlling our **Pods**, then we wish to update our **Pods** to a newer version, now we should create **Replicaset-B**, scale down **ReplicaSet-A** and scale up **ReplicaSet-B** by one step repeatedly (This process is known as **rolling update**). Although this does the job, but it's not a good practice and it's better to let **K8S** do the job. A **Deployment** resource does this automatically without any interaction and so then increases the abstraction by one level.
+
+A Deployment resource does this automatically without any human interaction and increases the abstraction by one level.
 
 ## 5.10 Labels & Selectors
 - `labels` are key/value pairs that are attached to objects, such as **Pods**.
