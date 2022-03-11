@@ -440,6 +440,9 @@ At the high-level, **Deployment** is all about *Update & Rollback* (for [Pods & 
 
 - RollingUpdate (Ramped) [**Default**]
     - It works by slowly: a secondary `rc` is created with the new version, then replacing **Pods** of the previous version of your application with **Pods** of the new version (one by one) until the correct number of replicas is reached.
+    - This rollout is triggered **if and only** if the **Deployment's Pod** `template` (that is, `.spec.template`) is changed, for example, if the labels or container images of the template are updated. Other updates, such as scaling the deployment, do not trigger a rollout.
+        - To view the rollout status: `kubectl rollout status ...`
+    - To roll back an object's rollout, we can use the `kubectl rollout undo ...` command.
 
 - Canary - let the user do the testing
     - routes a **subset of users** to a new functionality (to get user feedback for new features, for ex). And when no errors reported, the new version can gradually roll out to the rest of the infrastructure. So basically, this is an ideal strategy for someone who want to test new version before it's deployed 100%.
