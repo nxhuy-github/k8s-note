@@ -106,7 +106,7 @@ from kfp.components import create_component_from_func
 func_op_1 = create_component_from_func(
     func=func_to_wrap_1,
     output_component_file='component.yaml', # This is optional. It saves the component spec for future use.
-    base_image='python:3.7',
+    base_image='tensorflow/tensorflow:1.11.0-py3', # if you do not specify a container image, your Python-function based component uses the python:3.7 container image by default
     packages_to_install=['pandas==1.1.4']
 )
 
