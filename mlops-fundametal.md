@@ -130,3 +130,51 @@ In the case where the task is become more complex for example, we may need to us
     - the run parameters to the component
 5. Use this description file to load component into the pipeline
 
+## Compile and Run pipeline
+
+### Option 1: Compile and then upload in UI
+```python
+# 1. To compile pipeline and save it as pipeline.yaml
+kfp.compiler.Compiler().compile(
+    pipeline_func=my_pipeline,
+    package_path='pipeline.yaml')
+
+# 2. Using the Kubeflow Pipelines User Interface to upload and run pipeline.yaml  
+``` 
+
+### Option 2: Compile and deploy using CLI
+```shell
+$ dsl-compile --py <path/to/pipeline>.py --output <output_filename_for_future_use>.yaml
+$ kfp --endpoint $ENDPOINT pipeline upload -p <pipeline_name> <output_filename_for_future_use>.yaml
+```
+:information_source: For `ENDPOINT`, use the value of the `host` variable in the **Connect to this Kubeflow Pipelines instance from a Python client via Kubeflow Pipelines SDK** section of the **SETTINGS** window
+
+:fast_forward: To **submit the run** using KFP CLI
+```bash
+# Find the pipeline id appropriated via
+$ kfp --endpoint $ENDPOINT pipeline list
+
+# Run the pipeline using the kfp command line 
+$ kfp --endpoint $ENDPOINT run submit \
+-e <EXPERIMENT NAME> \ # choose any name you want
+-r <RUN ID> \ # an arbitrary name
+-p <PIPELINE ID> \
+arg1=...\ # arguments accepted by pipeline
+arg2=...\ 
+arg3=...\
+...
+``` 
+
+### Option 3: Run the pipeline using Kubeflow Pipelines SDK client
+```python
+# 1. Create an instance of the kfp.Client class
+client = kfp.Client() # change arguments according
+                      # When not specified, `host` defaults to env var KF_PIPELINES_ENDPOINT.
+
+# 2. Run the pipeline
+client.create_run_from_pipeline_func(
+    my_pipeline,
+    arguments={
+        ...
+    })
+```
