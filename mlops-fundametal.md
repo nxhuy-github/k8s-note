@@ -178,3 +178,9 @@ client.create_run_from_pipeline_func(
         ...
     })
 ```
+
+## Pipelines SDK
+Nowadays, Kubeflow offers us two modes of Pipelines SDK
+- [Pipelines SDK](https://www.kubeflow.org/docs/components/pipelines/sdk/sdk-overview/) - stable
+- [Pipelines SDK v2](https://www.kubeflow.org/docs/components/pipelines/sdk-v2/v2-compatibility/) - beta
+    -  Starting with **Kubeflow Pipelines 1.6**, you can build and run pipelines in v2 compatibility mode.
