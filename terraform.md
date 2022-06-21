@@ -78,3 +78,28 @@ This way, **Terraform** tries to help us provision and cover the complete applic
     - where the actual execution happens, execute the plan
 - `destroy`
     - destroy the resources/infrastructure, one by one in the right order  
+
+## Terraform: the meaning of "Authoritative" and "Non-Authoritative" in GCP IAM policy
+Basically it means, if a role is bound to a set of IAM identities and you want to add one more identity, **Authoritative** one will require you to specify all the old identities again, otherwise old identities will be removed from the role. **Non-authoritative** is the opposite. Let check an example
+```terraform
+# project
+data "google_project" "project" {}
+
+# service account
+resource "google_service_account" "my_sa" {
+  account_id   = "myserviceacct1"
+  display_name = "myserviceacct1"
+}
+
+# use non-authoritative resource
+# others in the same role are untouched
+resource "google_project_iam_member" "my_sa_roles" {
+  project = var.project
+
+  for_each = toset( ["roles/logging.logWriter","roles/monitoring.metricWriter"] )
+  role = each.key
+
+  member = "serviceAccount:${google_service_account.my_sa.email}"
+}
+```
+If this was done with an **Authoritative**, all other members in this role would need to be imported as data and referenced.
