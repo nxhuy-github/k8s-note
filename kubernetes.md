@@ -44,7 +44,8 @@ Summary
         - [kubelet](###-6.2.1-kubelet)
         - [kube-proxy](###-6.2.2-kube-proxy)
         - [Container runtime](###-6.2.3-Container-runtime)
-- [References](#-7.-References)
+- [Role-based Access Control](#-7.-Role-based-Access-Control)
+- [References](#-8.-References)
 
 # 1 Why we need K8s
 When a microservice application is deployed in production, it usually has many running containers that need to be allocated the right amount of resources in response to user demands. Also, there is need to ensure that the containers are online, running and communicating with one another. The need to efficiently manage and coordinate clusters of containerized applications gave riseto K8s.
@@ -674,8 +675,18 @@ Now, how are the images (built by Docker) going to run in K8s cluster where ther
 
 Conclure, no impact !!! 
 
+# 7. Role-based Access Control
+As the number of cluster nodes, applications, and team members increases, we’ll want to limit the resources our team members and applications can access, as well as the actions they can take. The **Role-Based Access Control (RBAC)** framework in K8s allows us to do just that. For example, it can help to ensure that developers only deploy certain apps to a given namespace or that our infrastructure management teams have view-only access for monitoring tasks. 
 
-# 7. References
+The **RBAC** API declares four kinds of K8s object: **Role**, **ClusterRole**, **RoleBinding** and **ClusterRoleBinding**. In K8s, **ClusterRole** and **Role** define the actions a user can perform within a cluster or namespace, respectively. We can assign these roles to K8s **subjects** (users, groups, or service accounts) with **RoleBinding** and **ClusterRoleBinding**.
+
+A **Role** always sets permissions within a particular **Namespace**; when we create a **Role**, we have to specify the **Namespace** it belongs in. **ClusterRole**, by contrast, is a **non-namespaced** resource. So, if we want to define a role within a namespace, use a **Role**; if we want to define a role cluster-wide, use a **ClusterRole**.
+
+For example: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+
+ 
+
+# 8. References
 [1] https://kubernetes.io/docs/concepts/
 
 [2] https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-networking-guide-beginners.html
@@ -701,4 +712,8 @@ Conclure, no impact !!!
 [12] https://stackoverflow.com/questions/69448131/kubernetes-whats-the-difference-between-deployment-and-replica-set
 
 [13] https://stackoverflow.com/questions/41325087/what-is-the-difference-between-a-pod-and-a-deployment
+
+[14] https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+
+[15] https://www.strongdm.com/blog/kubernetes-rbac-role-based-access-control
 
