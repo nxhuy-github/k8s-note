@@ -229,6 +229,7 @@ spec:
     targetPort: 8080
 ```
 **Headless Service**
+
 Each connection to the **Service** is forwarded to one **randomly** selected backing **Pod**. But what if the client needs to connect to all of those **Pod**s? To do this, it needs to figure out the the IP of each individual **Pod** and luckily, in K8s, we have **Headless Service**. For more info, read [this article](https://stackoverflow.com/questions/52707840/what-is-a-headless-service-what-does-it-do-accomplish-and-what-are-some-legiti).
 
 #### 5.2.1.2 NodePort
