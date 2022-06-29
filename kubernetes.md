@@ -211,6 +211,26 @@ When we create a **Service** object
 #### 5.2.1.1 ClusterIP [Default]
 It is reachable only from **within** the cluster: it gives us a **Service** inside our cluster that other apps inside our cluster can access (for example: we don't want to expose our database to the outside world, in such case, **Service** type ClusterIP is a good option). There is *no external access*.
 
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-cip-service
+spec:
+  type: ClusterIP
+  # Uncomment the below line to create a Headless Service
+  # clusterIP: None
+  selector:
+    app: metrics
+    department: sales
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+```
+**Headless Service**
+Each connection to the **Service** is forwarded to one **randomly** selected backing **Pod**. But what if the client needs to connect to all of those **Pod**s? To do this, it needs to figure out the the IP of each individual **Pod** and luckily, in K8s, we have **Headless Service**. For more info, read [this article](https://stackoverflow.com/questions/52707840/what-is-a-headless-service-what-does-it-do-accomplish-and-what-are-some-legiti).
+
 #### 5.2.1.2 NodePort
 **NodePort**, superset of **ClusterIP**, opens **a** specific **port on all** the Nodes of our cluster (in case if we don't mention **NodePort** specifically in the manifest file, then K8s will assign unused **NodePort** dynamically). It makes a **Service** accessible from the outside world using `NodeIP:NodePort` or `ClusterIP:XXYYZZ`.
 
