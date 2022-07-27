@@ -29,8 +29,38 @@ Like we know, in K8s, if we want to expose a **Service** to the outside word, we
 
 That could be why it is ideal to use **Ingress** and **Ingress Controller** over [Service](https://kubernetes.io/docs/concepts/services-networking/service/) type `LoadBalancer`.  As **Ingress Controller** collect **Ingress** resources behind **a common IP**, they are then less expensive. Beside that, **Ingress Controller** can also provide many features such as ACME , middleware, and load balancing, TLS configurations - TLS security, observability of a platform, etc. When used correctly, **Ingress Controller** can dramatically simplify the operations of K8s clusters while improving security, observability, performance, and resilience.
 
+## GKE Ingress Controller built-in
+In GKE, the good thing is that it comes up with an **inbuilt** GKE **Ingress Controller**. So we **DON'T** have to do any extra configurations to set up an Ingress Controller. Of course, GKE also lets us set up other Ingress Controllers (like the Nginx ingress controller for ex) - Choosing a **GKE Ingress Controller** vs. another **Ingress Controller** really depends on the project requirements and features required in the Ingress layer. 
 
+By default, when we create an **Ingress** object in GKE cluster, the **GKE Ingress Controller** will automatically spin up a HTTP(S) Load Balancer (in fact, we can choose the type of LB - an `external` or an `internal` HTTP(S) LB by using an `annotation` on the **Ingress** object) for us. And usually, the backend [Services](https://kubernetes.io/docs/concepts/services-networking/service/) referenced in this **Ingress** object should be of type `NodePort`.
 
+For now, :warning: GKE [doesn't support](https://cloud.google.com/kubernetes-engine/docs/concepts/ingress#limitations) combining multiple **Ingress** resources into **a single** Google Cloud Load Balancer. Meaning that for each **Ingress** object created, a separate HTTP(S) Load Balancer will be automatically provisioned (so it could be very expensive in some cases). We could circumvent this problem by passing all our ingress rules into a single **Ingress** resource (like a big **Ingress** yaml file that will contain all of our rules).
+
+## Traefik on GKE
+Like we know, GKE lets us set up other Ingress Controller if needed and [Traefik](https://doc.traefik.io/traefik/) is also the case. In fact, we can simply [install](https://github.com/traefik/traefik-helm-chart/tree/master/traefik) **Traefik** via [Helm](https://helm.sh/docs/), which works totally fine. Once we install **Traefik** in GKE cluster, GCP will automatically spin up a **Network (TCP protocol) Load Balancer** (an L4 LB) for us. So this is the case that we mentionned above - combining L4 LB and L7 LB: here, we have a GCP Network Load Balancer which lives **outside** the cluster and a **Traefik Ingress Controller** acts as a HTTP(S) Load Balancer which resides **inside** the cluster.
+
+To inform our **Ingress** objects that **Traefik Ingress Controller** is the thing that we want to use, in the **Ingress** configuration yaml file, we configure
+```yaml
+# ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    annotations:
+        # kubernetes.io/ingress.class: <traefik-fullname> <- it seems like this annotations was deprecated or what, it doesn't work well with Traefik at least, use `ingressClassName` instead
+...
+spec:
+    ingressClassName: <traefik-fullname>
+...
+``` 
+By using Helm, the `<traefik-fullname>` here will be either
+- by default, the Chart Name -> `ingressClassName: traefik`
+- or the [Release name](https://stackoverflow.com/questions/51718202/helm-how-to-define-release-name-value) if its value contains Chart name :joy:
+- or the value of `fullnameOverride` in our **override** Traefik configuration [values.yaml](https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml) if we use one
+    - yah, <u>in our override value.yaml</u> since the value.yaml default didn't show this option at the first glance :smiling_face_with_tear:
+
+:warning: by installing Traefik via helm, we should always read the [repo](https://github.com/traefik/traefik-helm-chart/tree/master/traefik) for more understanding
+
+This `<traefik-fullname>` value (or whatever we call it) is very important because if we use a wrong one, **Traefik Ingress Controller** won't work as we expected. For example, in the case where we want to deploy one distinct **Traefik Ingress Controller** for each [Namespace](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) in our cluster, by setting/deploying different `fullnameOverride` could be helpful.
 
 
 
