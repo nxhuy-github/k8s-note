@@ -237,7 +237,7 @@ To do this, it needs to figure out the the IP of each individual **Pod**
     - :x: makes our app to tied to K8s API
     - :x: inefficient 
 - option 2: DNS Lookup with the **Headless Service**
-    - by setting `clusterIp: None`, we create a **Headless Service** and the DNS lookup will return the **Pod** IP address**es** of this **Service**
+    - by setting `clusterIP: None`, we create a **Headless Service** and the DNS lookup will return the **Pod** IP address**es** of this **Service**
 
 For more info, read [this article](https://stackoverflow.com/questions/52707840/what-is-a-headless-service-what-does-it-do-accomplish-and-what-are-some-legiti).
 
