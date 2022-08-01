@@ -203,8 +203,8 @@ When we create a **Service** object
         - has the same name with the **Service** object it's associated with
     - for ex
     <img src="./images/k8s-endpoints.png" alt="Endpoints"/>
-- without the label selector
-    - we must create **Endpoint** object if we want to use
+- When we create a **Service**, K8s also creates an **Endpoints** object that has a same name as the **Service** itself and K8s will use this **Endpoints** object to keep track of which **Pod**(s) are members of the **Service**. And this is dynamic since whenever we create a new **Pod** or a **Pod** died, the **Endpoints** gets updated 
+    - without the label selector, we must create **Endpoint** object if we want to use
 
 
 ### 5.2.1 Types of Services
