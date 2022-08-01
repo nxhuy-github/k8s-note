@@ -200,6 +200,8 @@ In Kubernetes, a **Service** is an abstraction
 
 :key: each **Service** has its own DNS name or its own IP addresse. Name and IP addresse of **Service** are stable. The name and IP gets registered with the cluster's built-in **DNS**, or add-on **DNS**.
 
+:name_badge: The DNS Name of **Service** is normally `my-svc.my-namespace.svc.cluster.local`
+
 :information_source: The **Domain Name System (DNS)** is a system for associating various types of information – such as IP addresses – with easy-to-remember names. Every cluster can have a native DNS Service (we might have to manually start it) and every **Pod** in a cluster knows how to use it.
 
 Using `selectors`, a **Service** will select the **Pods**' `labels` to get its respective **Pods**.
