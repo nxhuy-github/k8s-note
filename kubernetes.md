@@ -7,9 +7,6 @@ Summary
 - [Work with K8s](#-4.-Work-with-K8s)
 - [Concepts](#-5.-Concepts)
     - [Pod(s)](##-5.1-Pod(s))
-        - [Communication between containers in Pod](###-5.1.1-Communication-between-containers-in-Pod)
-        - [Communication between Pods on the same Node](###-5.1.2-Communication-between-Pods-on-the-same-Node)
-        - [Communication between Pods on different Nodes](###-5.1.3-Communication-between-Pods-on-different-Nodes)
     - [Service](##-5.2-Service)
         - [Types of Services](###-5.2.1-Types-of-Services)
             - [ClusterIP [Default]](####-5.2.1.1-ClusterIP-[Default])
@@ -132,10 +129,14 @@ A Pod contains:
 - storage resource (or volume), usually there is single volume for all the containers inside the pod 
 - **a unique IP address**
     - new IP address on **re**-creation
+- a DNS name (in general) - `pod-ip-address.my-namespace.pod.cluster.local`
+    - for ex: a Pod in the `default` namespace has the IP address `172.17.0.3` -> DNS name: `172-17-0-3.default.pod.cluster.local`
+    - but if the **Pod** is exposed by a **Service**, the DNS name would be:
+        - `pod-ip-address.service-name.my-namespace.svc.cluster.local`
 
 <img src="./images/k8s-pods.png" alt="Pods"/>
 
-### 5.1.1 Communication between containers in Pod
+### Communication between containers in same Pod :handshake:
 In K8s, two containers running in the same **Pod** talk to each other via `localhost` and **port number**. This is because each **Pod** has its own **Network Namespace** so containers in the same **Pod** are in the same **Network Namespace** - they share network resources.
 
 <img src="./images/k8s-same-pod.gif" alt="Same Pod"/>
@@ -144,7 +145,15 @@ We need also to watch out for *port conflicts* when we've got multiple container
 
 In fact, there's a secret container, called `pause` container, that runs on every **Pod** to keep the namespace open in case all the other containers on the **Pod** die.
 
-### 5.1.2 Communication between Pods on the same Node
+### Communication between Pods :speaking_head:
+In K8s perspective, a container in a **Pod** can connect to another **Pod** either by using 
+- its IP address
+- its DNS name - `pod-ip-address.my-namespace.pod.cluster.local` 
+    - `pod-ip-address.service-name.my-namespace.svc.cluster.local` if this **Pod** is exposed by a **Service**
+
+In fact, a **Pod** should be able to communicate with all **Pods** in the cluster, even when they are sitting in different nodes.
+
+### Behind the scenes :label: Communication between Pods on the same Node
 
 We know that each **Pod** has its own **Network Namespace** and **a unique IP address**. Besides that, K8s also creates (fakes) a virtual ethernet connection `eth0` to make network requests through. In fact, each `eth0` connects to the Node via a tunnel, called virtual ethernet device. This connection has two sides – on the pod’s side, it’s named `eth0`, and on the node’s side, it’s named `vethX` (there’s a `vethX` connection for every **Pod** on the Node: `veth1`, `veth2`, `veth3`, etc).
 
@@ -154,7 +163,7 @@ To communicate between **Pods**, K8s uses a **Network Bridge**, called `cbr0`. W
 
 Every pod on a node is part of the bridge, and the bridge connects all pods on the same node together.
 
-### 5.1.3 Communication between Pods on different Nodes
+### Behind the scenes :label: Communication between Pods on different Nodes
 
 When the **Network Bridge** `cbr0` asks all the connected **Pods** if they have the right IP address and none of them say yes, then, this goes up to the Cluster level and looks for the IP address.
 
