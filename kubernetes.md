@@ -153,7 +153,7 @@ In K8s perspective, a container in a **Pod** can connect to another **Pod** eith
 
 In fact, a **Pod** should be able to communicate with all **Pods** in the cluster, even when they are sitting in different nodes.
 
-### Behind the scenes :label: Communication between Pods on the same Node
+#### Behind the scenes :label: Communication between Pods on the same Node
 
 We know that each **Pod** has its own **Network Namespace** and **a unique IP address**. Besides that, K8s also creates (fakes) a virtual ethernet connection `eth0` to make network requests through. In fact, each `eth0` connects to the Node via a tunnel, called virtual ethernet device. This connection has two sides – on the pod’s side, it’s named `eth0`, and on the node’s side, it’s named `vethX` (there’s a `vethX` connection for every **Pod** on the Node: `veth1`, `veth2`, `veth3`, etc).
 
@@ -163,7 +163,7 @@ To communicate between **Pods**, K8s uses a **Network Bridge**, called `cbr0`. W
 
 Every pod on a node is part of the bridge, and the bridge connects all pods on the same node together.
 
-### Behind the scenes :label: Communication between Pods on different Nodes
+#### Behind the scenes :label: Communication between Pods on different Nodes
 
 When the **Network Bridge** `cbr0` asks all the connected **Pods** if they have the right IP address and none of them say yes, then, this goes up to the Cluster level and looks for the IP address.
 
