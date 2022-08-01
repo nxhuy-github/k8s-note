@@ -230,7 +230,16 @@ spec:
 ```
 **Headless Service**
 
-Each connection to the **Service** is forwarded to one **randomly** selected backing **Pod**. But what if the client needs to connect to all of those **Pod**s? To do this, it needs to figure out the the IP of each individual **Pod** and luckily, in K8s, we have **Headless Service**. For more info, read [this article](https://stackoverflow.com/questions/52707840/what-is-a-headless-service-what-does-it-do-accomplish-and-what-are-some-legiti).
+Each connection to the **Service** is forwarded to one **randomly** selected backing **Pod**. But what if the client needs to connect to all of those **Pod**s or to **one specific Pod directly**? A such usecase like this is when, for example, we deploy *stateful applications* like database. Why so? Take an example, if we deploy a MySQL database in K8s, we'll have Master instance and Workers instances and since Master is the only **Pod** that allowed to write data so if we want to write data, we need to talk directly to the Master.
+
+To do this, it needs to figure out the the IP of each individual **Pod** 
+- option 1: make API call to K8s API Server
+    - :x: makes our app to tied to K8s API
+    - :x: inefficient 
+- option 2: DNS Lookup with the **Headless Service**
+    - by setting `clusterIp: None`, we create a **Headless Service** and the DNS lookup will return the **Pod** IP address**es** of this **Service**
+
+For more info, read [this article](https://stackoverflow.com/questions/52707840/what-is-a-headless-service-what-does-it-do-accomplish-and-what-are-some-legiti).
 
 #### 5.2.1.2 NodePort
 **NodePort**, superset of **ClusterIP**, opens **a** specific **port on all** the Nodes of our cluster (in case if we don't mention **NodePort** specifically in the manifest file, then K8s will assign unused **NodePort** dynamically). It makes a **Service** accessible from the outside world using `NodeIP:NodePort` or `ClusterIP:XXYYZZ`.
