@@ -374,14 +374,16 @@ A *PersistentVolumeClaim* (**PVC**) is *a request for Persistent Volumes* by  de
 
 In fact, developers have to explicitly configure the application yaml file to use the **Persistent Volume** components. In other words, application has to **claim** that volume storage. To do that, we use **PVC(s)**, which also is created with yaml file.
 
-:anchor: **PVC(s)** needs to be used/referenced in **Pod(s)** yaml configuration file and must be in the same **Namespace** as the **Pod(s)** using claim.
+:anchor: **PVC(s)** needs to be used/referenced in **Pod(s)** yaml configuration file and must be in the **same Namespace** as the **Pod(s)** using claim.
+
+:warning: **PVC** is **namespaced** resource
 
 #### :dart: About Persistent Volumes :books:
 A **PersistentVolume** (**PV** for short) is a piece of storage in the cluster, which means **PV** is *a resource in the cluster* just like a RAM/CPU is a cluster resource. So the **PV** lifecycle is independent with **Pods** lifecycle that use the PV.
 
 Since **PV** is just an abstract component, it must take the storage from the actual physical storage like local hard drive from the cluster nodes or an external NFS server outside of the cluster or Cloud storage like AWS/GS/etc.
 
-The **PV** need to be there BEFORE the **Pod(s)** that depends on it is created.
+The **PV** need to be there BEFORE the **Pod(s)** that depends on it is created. FYI, **PV** is **NOT namespaced**. You can share **PV** and **PVC** within the **same Namespace** but NOT cross-namespace ([ref](https://stackoverflow.com/questions/35364367/share-persistent-volume-claims-amongst-containers-in-kubernetes-openshift)). **PV**-to-**PVC** relationship is **ONE-TO-ONE**.
 
 Lifecycle of PV: 
 - Provisioning
