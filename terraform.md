@@ -78,6 +78,9 @@ This way, **Terraform** tries to help us provision and cover the complete applic
     - where the actual execution happens, execute the plan
 - `destroy`
     - destroy the resources/infrastructure, one by one in the right order  
+- `import`
+    - allows you to import existing resources into your Terraform state
+        - useful when we have **existing** resources that were **not** created by Terraform, and we want to manage them with Terraform going forward. 
 
 ## Terraform: the meaning of "Authoritative" and "Non-Authoritative" in GCP IAM policy
 Basically it means, if a role is bound to a set of IAM identities and you want to add one more identity, **Authoritative** one will require you to specify all the old identities again, otherwise old identities will be removed from the role. **Non-authoritative** is the opposite. Let check an example
