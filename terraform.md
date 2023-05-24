@@ -83,7 +83,7 @@ This way, **Terraform** tries to help us provision and cover the complete applic
         - useful when we have **existing** resources that were **not** created by Terraform, and we want to manage them with Terraform going forward. 
 
 ## Terraform: the meaning of "Authoritative" and "Non-Authoritative" in GCP IAM policy
-Basically it means, if a role is bound to a set of IAM identities and you want to add one more identity, **Authoritative** one will require you to specify all the old identities again, otherwise old identities will be removed from the role. **Non-authoritative** is the opposite. Let check an example
+Basically it means(c.f [this](https://stackoverflow.com/a/70253521/12127115)), if a role is bound to a set of IAM identities and you want to add one more identity, **Authoritative** one will require you to specify all the old identities again, otherwise old identities will be removed from the role. **Non-authoritative** is the opposite. Let check an example
 ```terraform
 # project
 data "google_project" "project" {}
