@@ -11,9 +11,9 @@ The philosophy behind this workflow is to give back flexibility and control of t
 
 Because of that, greater emphasis should be put in communicating with colleagues to ensure we are not overwriting their work unknowingly.
 
-```diff
-+ ℹ️ To keep our commit history clean on the **main** branch, **squash & merge must be enforced** for every PR with **1 feature = 1 commit** philosophy. It makes reverting broken changes much easier.
-```
+
+> ℹ️ To keep our commit history clean on the **main** branch, **squash & merge must be enforced** for every PR with **1 feature = 1 commit** philosophy. It makes reverting broken changes much easier.
+
 
 ## Workflow
 This is the workflow we want to apply to every repository:
@@ -41,32 +41,31 @@ git tag v1.0.0-uat
 git push origin v1.0.0-uat
 ```
 
-```diff
-! ⚠️ Be careful to not merge the **beta** branch into your feature branch, you do not want to bring the changes of others into your work.
-! If any merge conflict happens, resolve it directly on the beta branch.
-```
+
+> ⚠️ Be careful to not merge the **beta** branch into your feature branch, you do not want to bring the changes of others into your work.
+>
+> If any merge conflict happens, resolve it directly on the **beta** branch.
+
 
 - If you’re ok with your work, open a PR to `main` from your feature branch. **Remember to always merge/rebase the main branch into your feature branch before opening a PR to solve all merge conflicts breforehand.** 
 Ideally this PR should be open before the product team begins testing so any code improvement can be done beforehand. 
 
-```diff
-+ If your work is dependant on another feature which is not merged yet, mentioned it on the PR so tracking of dependencies is easier.
-```
+> If your work is dependant on another feature which is not merged yet, mentioned it on the PR so tracking of dependencies is easier.
+
 
 - If your work is validated by the product team and reviewed by the tech team, merge your PR into main (**squash & merge is enforced** by default and should always be used). 
 
 ## Deployment 🚀
-Deployment is handled through the use of git tags. The format is following Gestion sémantique de version 2.0.0 (v{Major}.{Minor}.{Patch}). 
+Deployment is handled through the use of git tags. The format is following Gestion sémantique de version 2.0.0 (`v{Major}.{Minor}.{Patch}`). 
 
 
-MAJOR version when you make incompatible API changes
-
-MINOR version when you add functionality in a backward compatible manner
-
-PATCH version when you make backward compatible bug fixes
+> MAJOR version when you make incompatible API changes
+>
+> MINOR version when you add functionality in a backward compatible manner
+>
+> PATCH version when you make backward compatible bug fixes
 
 The deploy pipeline is triggered as follow : 
-
 - for dev → v*.*.*-dev
 - for beta → v*.*.*-uat
 - for prod → v*.*.*-prd
@@ -92,18 +91,23 @@ If any regression happens in prod and we need to rollback changes, here is the p
 
 Go to the `Actions` tab and search for the latest working production deployment (since we are using semver it should be the version before you). Click on the pipeline and select `Re-run all jobs` on the drop-down menu in the upper-right corner.
 
+> As long as the problem persist we **should not** push any changes into the main branch.
+>
+> If the timeframe for fixing is too long, consider reverting the commit that caused the problem until a fix is available.
 
-```diff
-+ As long as the problem persist we SHOULD NOT push any changes into the main branch.
-+ If the timeframe for fixing is too long, consider reverting the commit that caused the problem until a fix is available.
-```
 
 ### Hotfixes 🚧
-```diff
-! ⚠️ Hotfixes are meant for urgent changes in production in case we break something. If the fix can wait, follow the standard push to prod procedure.
-```
+> ⚠️ Hotfixes are meant for urgent changes in production in case we break something. If the fix can wait, follow the standard push to prod procedure.
+
 Hotfixes should be treated like regular features in term of testing and deployment to test env ( dev & beta). 
 
-Create them in hotfix branch `git checkout -b hotfix/search-1450-my-hotfix` and tag them as [HOTFIX] when opening your PR to `main`.
+Create them in hotfix branch `git checkout -b hotfix/search-1450-my-hotfix` and tag them as `[HOTFIX]` when opening your PR to `main`.
 
 To deploy them to production, contact one of the repo maintainers (PR needs to be merged).
+
+## Disclaimer
+The gitflow describe as above is **NOT** intended to solve all problems encountered when working with more than one developer on a project. Some conflicts will happen if two person modify the same file. Some problem could happen when releasing a new version.
+
+The real goal here is to simplify git usage to avoid technological problems.
+
+Once the tool is usable by every one, we should try to tacle other problems with organization & team work.
