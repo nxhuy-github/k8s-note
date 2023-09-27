@@ -12,7 +12,7 @@ The philosophy behind this workflow is to give back flexibility and control of t
 Because of that, greater emphasis should be put in communicating with colleagues to ensure we are not overwriting their work unknowingly.
 
 ```diff
-+ :information: To keep our commit history clean on the **main** branch, **squash & merge must be enforced** for every PR with **1 feature = 1 commit** philosophy. It makes reverting broken changes much easier.
++ ℹ️ To keep our commit history clean on the **main** branch, **squash & merge must be enforced** for every PR with **1 feature = 1 commit** philosophy. It makes reverting broken changes much easier.
 ```
 
 ## Workflow
@@ -42,7 +42,7 @@ git push origin v1.0.0-uat
 ```
 
 ```diff
-! :warning: Be careful to not merge the **beta** branch into your feature branch, you do not want to bring the changes of others into your work.
+! ⚠️ Be careful to not merge the **beta** branch into your feature branch, you do not want to bring the changes of others into your work.
 ! If any merge conflict happens, resolve it directly on the beta branch.
 ```
 
@@ -100,7 +100,7 @@ Go to the `Actions` tab and search for the latest working production deployment 
 
 ### Hotfixes 🚧
 ```diff
-! :warning: Hotfixes are meant for urgent changes in production in case we break something. If the fix can wait, follow the standard push to prod procedure.
+! ⚠️ Hotfixes are meant for urgent changes in production in case we break something. If the fix can wait, follow the standard push to prod procedure.
 ```
 Hotfixes should be treated like regular features in term of testing and deployment to test env ( dev & beta). 
 
