@@ -66,9 +66,9 @@ Deployment is handled through the use of git tags. The format is following Gesti
 > PATCH version when you make backward compatible bug fixes
 
 The deploy pipeline is triggered as follow : 
-- for dev → v*.*.*-dev
-- for beta → v*.*.*-uat
-- for prod → v*.*.*-prd
+- for dev → `v*.*.*-dev`
+- for beta → `v*.*.*-uat`
+- for prod → `v*.*.*-prd`
 
 The *-prd tags are protected and may only be generated  from main branch by repo maintainers.
 
