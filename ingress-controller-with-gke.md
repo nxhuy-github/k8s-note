@@ -2,8 +2,10 @@
 
 ## Terminology
 First thing first, we need to clarify some terminologies: 
-- **Ingress** or **Ingress resource** or **Ingress object** is a native K8s object in which we specify the DNS rules. We can deploy a bunch of **Ingress** rules, but nothing will happen unless we have a controller that can process them
+- **Ingress** or **Ingress resource** or **Ingress object** is a native K8s object in which we specify the DNS **rules**. We can deploy a bunch of **Ingress** rules, but nothing will happen unless we have a controller that can process them
 - **Ingress Controller** in the other hand IS NOT a native K8s implementation. Meaning, It doesn’t come default in the cluster
+
+While **Ingress Controller** can be deployed in **any namespace** it is usually deployed in a namespace separate from your app services. It can see **Ingress rules** in all other namespaces and pick them up. However, each of the **[Ingress rules must reside in the namespace where the app that they configure reside](https://stackoverflow.com/questions/59844622/ingress-configuration-for-k8s-in-different-namespaces)** (i.e Ingress can only route to Services within the same namespace).
 
 ## What is Ingress Controller
 An **Ingress Controller** is typically a [reverse web proxy server](https://www.cloudflare.com/en-gb/learning/cdn/glossary/reverse-proxy/) implementation in the cluster. In K8s terms, it is a reverse proxy server deployed as K8s [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) exposed to a [Service](https://kubernetes.io/docs/concepts/services-networking/service/) type `LoadBalancer`.
