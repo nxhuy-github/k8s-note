@@ -1,5 +1,30 @@
 # Database - Things found on the Internet
 
+## Database essentials
+👉 ACID properties
+- Atomicity: Transactions are binary; they either complete fully or don’t execute at all.
+- Consistency: Post any transaction, the database remains consistent.
+- Isolation: Each transaction operates independently.
+- Durability: Once data is committed, it’s there for the long haul.
+
+👉 Vertical Scaling (“Scale Up”) vs Horizontal Scaling (“Scale Out”)
+
+👉 Database Sharding: This involves distributing different data segments (or shards) across multiple servers, improving performance, scalability, and ease of management.
+- Range-based Sharding: Based on a specific key’s range.
+- Directory-based Sharding: A lookup service directs traffic.
+- Geographical Sharding: Data distribution based on location.
+
+👉 Replication: It’s all about duplicating data across servers for high availability.
+- Master-Slave Replication: One primary database with numerous read-only replicas.
+- Master-Master Replication: Multiple read-write databases.
+
+👉 Boosting Database Performance
+- Caching: Leverage caching to store frequent queries, using in-memory databases like Redis, enhancing performance manifold.
+- Indexing: Much like a book’s index, database indexes on **often-accessed columns** can drastically improve retrieval times.
+- Query Optimization: Streamline your queries, minimize joins, and always, always steer clear of the generic SELECT *.
+
+👉 The CAP (Consistency, Availability, and Partition tolerance) Theorem: A Pillar in Database Decision Making
+
 ## Wide-column DB vs Column family DB vs Columnar DB vs Column-oriented DB 🫠
 First, **Columnar DB** and **Column-oriented DB** essentially refer to the same concept in the context of database design. In terms of storage, they will store each column separately on disk. These databases are best suited for **OLAP (Online analytical processing)** use cases.
 
@@ -55,6 +80,17 @@ Current databases are optimized for analytical (OLAP) or transactional workloads
 | Stand-alone  | PostgreSQL, MySQL  | Snowflake, ClickHouse, Redshift, BigQuery  |
 | Embedded  | SQLite, SolidDB  | DuckDB  |
 
-
+## Schema used in Data Warehouse
+- Star ⭐ Schema  
+    - simple, designed to be easy to understand
+    - create a denormalized tables - introduce redundancy for improved query performance
+    - higher disk space due to data redundancy
+- Snowflake ❄️ Schema 
+    - more complicated compared to Star Schema
+    - create normalized tables - eliminate any redundant data to reduce overhead
+    - lower disk space due to limited data redundancy
+- Galaxy 🌌 Schema (aka Fact Constellation Schema)
+    - create normalized tables
+    - reduces redundancy to near zero redundancy as a result of normalization
 
 
