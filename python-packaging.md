@@ -106,6 +106,11 @@ There are two types of distribution in Python
         - `python setup.py bdist`
         - `python setup.py bdist --format=zip` 
         - `python setup.py bdist_wheel` - building a Pure-Python [wheel](https://packaging.python.org/en/latest/glossary/#term-Wheel)
+     
+[Different Types of Wheels](https://realpython.com/python-wheels/#different-types-of-wheels)
+- A **universal** wheel contains py2.py3-none-any.whl. It **supports both Python 2 and Python 3 on any OS and platform**. The majority of wheels listed on the Python Wheels website are universal wheels.
+- A **pure-Python** wheel contains either py3-none-any.whl or py2.none-any.whl. It supports **either Python 3 or Python 2, but not both**. It’s otherwise the same as a universal wheel, but it’ll be labeled with either py2 or py3 rather than the py2.py3 label.
+- A **platform** wheel supports a specific Python version and platform. It contains segments indicating a specific Python version, ABI, operating system, or architecture.
 
 
 
